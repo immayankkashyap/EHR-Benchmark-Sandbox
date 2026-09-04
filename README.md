@@ -1,59 +1,79 @@
 # Healthcare EHR Sandbox
 
-A comprehensive benchmarking environment and sandbox for evaluating AI models and agents on clinical workflows, FHIR data structures, and complex healthcare decision-making tasks.
+A secure, isolated, and reproducible benchmarking environment designed for evaluating clinical AI models and LLM agents on electronic health record (EHR) workflows, FHIR data standards, and multi-step healthcare decision-making tasks.
 
 ---
 
-## Project Purpose
+## Project Overview & Context
 
-The Healthcare EHR Sandbox provides an isolated, reproducible, and secure testing environment for clinical LLM agents. It pairs a standard FHIR (Fast Healthcare Interoperability Resources) data store with clinical reference auxiliary tools, network proxy isolation, and evaluation orchestrators to safely benchmark model performance on realistic patient cases.
+Benchmarking AI models on healthcare workflows presents strict requirements around data privacy, state reproducibility, tool access, and safety isolation. The Healthcare EHR Sandbox solves this by providing a containerized ecosystem where clinical AI agents can:
+1. Interact with a standardized **HAPI FHIR JPA Server** populated with case-specific clinical data.
+2. Query offline **auxiliary clinical reference microservices** (Drug Interaction, Lab Reference Ranges, Dosage Guidelines).
+3. Execute multi-turn reasoning loops through a centralized **Orchestrator Service**.
+4. Operate under strict **network egress proxy isolation**, allowing communication only with approved LLM API provider domains (`.openai.com` and `.anthropic.com`).
+5. Log structured, audit-ready **JSONL trajectories** including timestamps, tool arguments, raw responses, and latency metrics.
 
 ---
 
-## Implementation Progress
+## How the Sandbox Works
 
-### Completed Features and Scaffolded Architecture
+### 1. Architectural Topology & Network Isolation
+The sandbox utilizes a dual Docker network topology:
+- **`sandbox_internal` (`internal: true`)**: A isolated bridge network with zero internet access. All core data infrastructure (PostgreSQL database, HAPI FHIR JPA server) and auxiliary reference microservices reside strictly on this network.
+- **`proxy_external`**: A standard bridge network connecting the **Egress Proxy (`squid`)** to the external internet.
+- **Orchestrator Gateway**: The Orchestrator container bridges both networks. All outbound internet requests from the Orchestrator are forced through the Squid egress proxy via environment variables (`HTTP_PROXY` and `HTTPS_PROXY`). Squid enforces an explicit ACL allowlist permitting traffic exclusively to `.openai.com` and `.anthropic.com`, dropping all unauthorized destination requests.
 
-#### 1. Repository Infrastructure and Design Architecture
-- **Directory Structure**: Fully scaffolded workspace covering network proxies, FHIR configuration, Synthea generators, case ingestion, auxiliary microservices, evaluation orchestration, and test suites.
-- **Configuration and Environment**: Set up root configuration including `.env.example`, `.gitignore`, `docker-compose.yml`, and `docker-compose.override.yml.example`.
-- **Standards and Guidance**: Added module-level docstrings detailing Phase and Purpose across all Python files.
+### 2. Case Ingestion & State Tagging
+Clinical benchmark tasks are defined using a structured JSON case specification schema (`case-ingestion/case_spec_schema.json`). The ingestion pipeline (`case-ingestion/ingest_case.py`):
+- Converts demographic and clinical data into standard FHIR `transaction` Bundles (`Patient`, `Condition`, `Observation`, `MedicationRequest`, `AllergyIntolerance`).
+- Automatically tags every resource metadata header (`meta.tag`) with the unique benchmark `task_id` (`http://healthcare-ehr-sandbox.local/tags/task_id`).
+- Performs pre-ingestion idempotency checks to prevent duplicate state corruption.
 
-#### 2. Phase 1: Case-Spec Ingestion Interface
-- **Case Specification JSON Schema (`case-ingestion/case_spec_schema.json`)**:
-  - Defines the formal schema for synthetic clinical case specifications.
-  - Enforces `metadata` (`task_id`, `salted_fields`, `snapshot_date`), `patient` demographics (ID, name, gender, birth date), and resource arrays for `conditions`, `observations`, `medications`, and `allergies`.
-- **Mock Clinical Case (`case-ingestion/mock_cases/example_case_001.json`)**:
-  - Realistic mock patient case for benchmark task `MEDMCQA-CASE-001`.
-  - Includes patient demographics, active abdominal pain condition, heart rate and blood pressure panel observations, morphine medication request, and penicillin allergy.
-- **Ingestion Pipeline (`case-ingestion/ingest_case.py`)**:
-  - Translates case-spec JSON files into standard FHIR `transaction` Bundles (`Patient`, `Condition`, `Observation`, `MedicationRequest`, `AllergyIntolerance`).
-  - **Resource Tagging**: Inserts the `task_id` into `meta.tag` for every generated FHIR resource to enable precise teardown and isolation during evaluation cycles.
-  - **Idempotency and Safety**: Performs pre-ingestion checks against `GET /fhir/Patient?_tag={task_id}` to prevent duplicate resource creation.
-  - **CLI and Logging**: Built with `argparse`, `requests`, error handling, and python type hinting.
+### 3. Unified Orchestration & Tool Execution
+When a benchmark task is submitted via `POST /run-task`:
+- The Orchestrator formats the prompt and exposes OpenAI-compatible tool function definitions (`query_fhir_resource`, `check_drug_interaction`, `lookup_lab_range`, `get_dosage_guideline`).
+- Tool calls returned by the model are intercepted by `router.py` and dispatched over the internal network to the appropriate service.
+- Standardized error handling ensures internal tool failures return structured error messages back to the agent memory for self-correction rather than crashing the evaluation loop.
 
-#### 3. Phase 2: Auxiliary Microservices (Offline Lookup Tools)
-- **Drug Interaction Checker (`auxiliary-tools/drug-interaction-checker/`)**:
-  - `GET /check-interaction` endpoint querying interactions between `drug_a` and `drug_b` (order-independent).
-  - Loaded static dataset `interactions_v2026-09-04.json` into memory during application startup using FastAPI lifespan events.
-  - Dockerized microservice exposing port 8000.
-- **Lab Reference Range Lookup (`auxiliary-tools/lab-reference-range/`)**:
-  - `GET /lab-range` endpoint returning test reference ranges for `test`, `age`, and `sex`.
-  - Loaded static dataset `lab_ranges_v2026-09-04.json` into memory during startup.
-  - Dockerized microservice exposing port 8000.
-- **Dosage Guideline Lookup (`auxiliary-tools/dosage-guideline/`)**:
-  - `GET /dosage` endpoint returning dosage guidelines based on `drug`, optional `indication`, and `weight_kg`.
-  - Loaded static dataset `dosage_guidelines_v2026-09-04.json` into memory during startup.
-  - Dockerized microservice exposing port 8000.
-- **Standardized Response and Safety Constraints**:
-  - Fully offline implementation with zero external API calls.
-  - Uniform response envelope returning `result`, `source_version`, and UTC `timestamp`.
-  - Error handling with HTTP 404 for unknown entries and HTTP 422 for invalid/missing query parameters.
+### 4. Telemetry & Trajectory Logging
+Every action, tool parameter, raw HTTP response, and execution latency metric is written to a JSONL log file at `/app/logs/<run_id>.jsonl`. The final clinical decision provided by the model terminates the execution loop and closes the trajectory log.
 
-#### 4. Infrastructure and Network Isolation Setup
-- **Network Egress Proxy**: Squid proxy Dockerfile and configuration in `networks/egress-proxy/` to restrict outgoing sandbox network requests.
-- **FHIR Infrastructure**: HAPI FHIR JPA server backed by PostgreSQL (`fhir/docker-compose.fhir.yml`) with healthcheck scripts (`fhir/init/wait-for-healthy.sh`).
-- **Automation Scripts and Baselines**: Shell scripts for environment resets (`scripts/reset_and_run.sh`), network isolation verification (`scripts/verify_isolation.sh`), Synthea bundle loading (`scripts/load_synthea_bundles.py`), and a deterministic scripted agent baseline (`scripted-model/scripted_agent.py`).
+---
+
+## Implemented Architecture & Phases
+
+### Phase 1: Case Specification & Ingestion Interface
+- JSON schema definition (`case-ingestion/case_spec_schema.json`).
+- Mock patient case for `MEDMCQA-CASE-001` (`case-ingestion/mock_cases/example_case_001.json`).
+- Automated FHIR Transaction Bundle converter with `task_id` resource tagging (`case-ingestion/ingest_case.py`).
+
+### Phase 2: Offline Auxiliary Reference Microservices
+- **Drug Interaction Checker** (`auxiliary-tools/drug-interaction-checker`): Fast API service providing `/check-interaction` lookups against static datasets (`interactions_v2026-09-04.json`).
+- **Lab Reference Range Service** (`auxiliary-tools/lab-reference-range`): FastAPI service providing `/lab-range` lookups segmented by age, sex, and test aliases (`lab_ranges_v2026-09-04.json`).
+- **Dosage Guideline Service** (`auxiliary-tools/dosage-guideline`): FastAPI service providing `/dosage` lookups by drug, indication, and weight (`dosage_guidelines_v2026-09-04.json`).
+- Lifespan in-memory dataset pre-loading with standardized JSON response envelopes (`result`, `source_version`, `timestamp`).
+
+### Phase 3: Unified Tool-Calling Orchestrator Layer
+- Centralized FastAPI service in `orchestrator/`.
+- OpenAI-compatible JSON function definitions in `orchestrator/app/schemas/`.
+- Internal HTTP routing client (`orchestrator/app/router.py`) executing internal tool calls and recording timing metrics.
+- Agent execution loop (`orchestrator/app/model_loop.py`) handling turn-by-turn prompts, tool feedback, and loop termination.
+
+### Phase 4: Trajectory & Telemetry Logging
+- Thread-safe JSONL trajectory logger (`orchestrator/app/logging/trajectory_logger.py`).
+- Captures `tool_call` events, function parameters, raw HTTP payload responses, latency metrics (`latency_ms`), and `final_answer` completions.
+
+### Phase 5: Network Isolation & Egress Proxy Configuration
+- Squid proxy server setup (`networks/egress-proxy/squid.conf`) listening on port 3128 with domain allowlisting (`.openai.com`, `.anthropic.com`) and default deny rules.
+- Master Compose configuration (`docker-compose.yml`) declaring `sandbox_internal` (`internal: true`) and `proxy_external` dual-network routing.
+- Automated network topology verification script (`scripts/verify_isolation.sh`).
+
+### Phase 6: State Teardown & Environment Reset
+- Environment lifecycle script (`scripts/reset_and_run.sh`) executing `docker compose down -v`, stack rebuilds, HAPI FHIR `/fhir/metadata` health polling, and baseline case ingestion.
+
+### Phase 7: End-to-End Deterministic Dry Run Harness
+- Mock state machine agent (`scripted-model/scripted_agent.py`) simulating a 3-turn reasoning trajectory without live LLM API keys.
+- Integration test harness (`e2e-tests/test_end_to_end_dry_run.py`) executing full environment resets, API execution triggers, log polling, and trajectory assertions.
 
 ---
 
@@ -61,55 +81,58 @@ The Healthcare EHR Sandbox provides an isolated, reproducible, and secure testin
 
 ```
 healthcare-ehr-sandbox/
-├── docker-compose.yml                   # Root docker-compose configuration
-├── docker-compose.override.yml.example  # Local development overrides example
+├── docker-compose.yml                   # Master Compose file (Dual Network Topology)
+├── docker-compose.override.yml.example  # Local development override examples
 ├── .env.example                         # Environment variable definitions
-├── README.md                            # Project documentation
+├── README.md                            # Complete project documentation
 ├── .gitignore                           # Git exclusion rules
 ├── networks/
-│   └── egress-proxy/                    # Egress proxy Dockerfile & Squid config
-├── fhir/
-│   ├── docker-compose.fhir.yml          # FHIR server service definitions
+│   └── egress-proxy/                    # Squid Egress Proxy container & config
+│       ├── Dockerfile
+│       ├── squid.conf
+│       └── entrypoint.sh
+├── fhir/                                # FHIR infrastructure configs & scripts
+│   ├── docker-compose.fhir.yml
 │   └── init/
-│       └── wait-for-healthy.sh          # Healthcheck polling script
-├── synthea/
-│   ├── run_synthea.sh                   # Synthea data generation trigger script
-│   ├── synthea.properties               # Synthea configuration properties
-│   └── output/                          # Generated patient bundles target directory
-├── case-ingestion/
-│   ├── ingest_case.py                   # Case JSON -> FHIR Transaction Bundle ingestion
-│   ├── case_spec_schema.json            # Case specification JSON schema
-│   ├── mock_cases/                      # Benchmark case JSON files
-│   │   └── example_case_001.json        # Example case (MEDMCQA-CASE-001)
+│       └── wait-for-healthy.sh
+├── synthea/                             # Synthea synthetic patient generator setup
+│   ├── run_synthea.sh
+│   ├── synthea.properties
+│   └── output/
+├── case-ingestion/                      # Case spec JSON schema & ingestion pipeline
+│   ├── ingest_case.py
+│   ├── case_spec_schema.json
+│   ├── mock_cases/
+│   │   └── example_case_001.json
 │   └── tests/
-│       └── test_ingest.py               # Unit tests for case ingestion
-├── auxiliary-tools/                     # Clinical reference microservices
-│   ├── drug-interaction-checker/        # Drug-drug interaction checker API & Dockerfile
-│   ├── lab-reference-range/             # LOINC lab reference range lookup API & Dockerfile
-│   └── dosage-guideline/                # Dosing guidance lookup API & Dockerfile
+│       └── test_ingest.py
+├── auxiliary-tools/                     # Offline clinical reference microservices
+│   ├── drug-interaction-checker/
+│   ├── lab-reference-range/
+│   └── dosage-guideline/
 ├── orchestrator/                        # Benchmark evaluation orchestrator
-│   ├── Dockerfile                       # Orchestrator Docker container definition
+│   ├── Dockerfile
 │   └── app/
-│       ├── main.py                      # Orchestrator FastAPI entrypoint
-│       ├── router.py                    # Tool call routing layer
-│       ├── model_loop.py                # Model evaluation execution loop
-│       ├── schemas/                     # Tool schemas (FHIR & Auxiliary)
-│       └── logging/                     # Trajectory logger (JSONL logger)
-├── scripts/                             # Utility & reset scripts
-│   ├── reset_and_run.sh                 # Environment reset automation
-│   ├── load_synthea_bundles.py          # Bulk bundle loader script
-│   └── verify_isolation.sh              # Network isolation test script
-├── scripted-model/                      # Baseline agent execution
-│   ├── scripted_agent.py                # Deterministic baseline agent
+│       ├── main.py                      # FastAPI entrypoint (POST /run-task)
+│       ├── router.py                    # Tool call routing & timing layer
+│       ├── model_loop.py                # Agent reasoning loop
+│       ├── schemas/                     # OpenAI tool schemas
+│       └── logging/                     # Trajectory logger
+├── scripts/                             # Environment reset & verification scripts
+│   ├── reset_and_run.sh                 # Environment reset & baseline ingestion
+│   ├── verify_isolation.sh              # Network isolation assertion script
+│   └── load_synthea_bundles.py
+├── scripted-model/                      # Deterministic mock agent for keyless dry-runs
+│   ├── scripted_agent.py
 │   └── scripts/
-│       └── dry_run_case_001.yaml        # Pre-scripted action steps
-└── e2e-tests/                           # End-to-end integration tests
+│       └── dry_run_case_001.yaml
+└── e2e-tests/                           # Integration & dry-run test suite
     └── test_end_to_end_dry_run.py
 ```
 
 ---
 
-## Getting Started and Usage
+## Getting Started and Running the Sandbox
 
 ### 1. Environment Setup
 Copy the environment template:
@@ -117,46 +140,50 @@ Copy the environment template:
 cp .env.example .env
 ```
 
-### 2. Start FHIR and Infrastructure Services
-Launch the FHIR server and PostgreSQL database:
+### 2. Full Environment Reset and Startup
+Run the automated environment setup script. This will tear down any existing containers and volumes, rebuild the image stack, wait for the FHIR server to report healthy, and ingest the baseline patient case (`example_case_001.json`):
 ```bash
-docker-compose up -d
-```
-Check FHIR server health:
-```bash
-./fhir/init/wait-for-healthy.sh
+./scripts/reset_and_run.sh
 ```
 
-### 3. Ingest a Case Specification
-Run the Phase 1 case-spec ingestion pipeline to convert a case JSON file into tagged FHIR resources:
+### 3. Verify Network Isolation
+Run the network topology test to confirm internal services cannot access the internet, allowed LLM API domains route through the proxy, and non-allowlisted domains are blocked:
 ```bash
-python3 case-ingestion/ingest_case.py case-ingestion/mock_cases/example_case_001.json
+./scripts/verify_isolation.sh
 ```
 
-### 4. Running Auxiliary Tool Services Locally
-Build and run any of the microservices individually:
+### 4. Run the Deterministic End-to-End Dry Run
+To verify the complete ingestion, orchestration, tool routing, and logging pipeline without requiring live LLM API keys:
 ```bash
-# Drug Interaction Checker
-cd auxiliary-tools/drug-interaction-checker
-docker build -t drug-interaction-checker .
-docker run -p 8000:8000 drug-interaction-checker
+python3 e2e-tests/test_end_to_end_dry_run.py
+```
 
-# Lab Reference Range Service
-cd auxiliary-tools/lab-reference-range
-docker build -t lab-reference-range .
-docker run -p 8000:8000 lab-reference-range
+### 5. Triggering Benchmark Runs via API
+Once the stack is running, send an evaluation task request to the Orchestrator:
+```bash
+curl -X POST http://localhost:8000/run-task \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_id": "MEDMCQA-CASE-001",
+    "model_provider": "scripted_agent",
+    "patient_id": "MEDMCQA-CASE-001"
+  }'
+```
 
-# Dosage Guideline Service
-cd auxiliary-tools/dosage-guideline
-docker build -t dosage-guideline .
-docker run -p 8000:8000 dosage-guideline
+### 6. Manually Ingesting Custom Cases
+To ingest a new case JSON file into the FHIR server with custom task tagging:
+```bash
+python3 case-ingestion/ingest_case.py path/to/your_case_spec.json
 ```
 
 ---
 
-## Verification and Testing
-Run unit tests and dry runs:
+## Verification & Testing
+To execute all test suites:
 ```bash
+# Run case ingestion unit tests
 python3 -m pytest case-ingestion/tests/
+
+# Run end-to-end integration dry-run test
 python3 -m pytest e2e-tests/
 ```
