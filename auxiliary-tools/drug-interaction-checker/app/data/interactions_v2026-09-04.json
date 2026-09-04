@@ -1,0 +1,26 @@
+[
+  {
+    "drug_a": "Aspirin",
+    "drug_b": "Warfarin",
+    "severity": "High Risk",
+    "description": "Concurrent use of Aspirin and Warfarin significantly increases the risk of major bleeding complications."
+  },
+  {
+    "drug_a": "Morphine",
+    "drug_b": "Penicillin",
+    "severity": "No Known Interaction",
+    "description": "No significant interaction documented."
+  },
+  {
+    "drug_a": "Lisinopril",
+    "drug_b": "Potassium",
+    "severity": "Moderate Risk",
+    "description": "Increased risk of hyperkalemia. Monitor serum potassium closely."
+  },
+  {
+    "drug_a": "Ibuprofen",
+    "drug_b": "Lithium",
+    "severity": "High Risk",
+    "description": "Ibuprofen can decrease the renal clearance of lithium, leading to lithium toxicity."
+  }
+]

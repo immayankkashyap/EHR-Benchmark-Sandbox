@@ -1,0 +1,42 @@
+[
+  {
+    "test": "White Blood Cell Count",
+    "aliases": ["WBC", "Leukocytes"],
+    "age_min": 18,
+    "age_max": 120,
+    "sex": "all",
+    "range_low": 4.5,
+    "range_high": 11.0,
+    "unit": "10*3/uL"
+  },
+  {
+    "test": "Hemoglobin",
+    "aliases": ["HGB"],
+    "age_min": 18,
+    "age_max": 120,
+    "sex": "male",
+    "range_low": 13.8,
+    "range_high": 17.2,
+    "unit": "g/dL"
+  },
+  {
+    "test": "Hemoglobin",
+    "aliases": ["HGB"],
+    "age_min": 18,
+    "age_max": 120,
+    "sex": "female",
+    "range_low": 12.1,
+    "range_high": 15.1,
+    "unit": "g/dL"
+  },
+  {
+    "test": "Potassium",
+    "aliases": ["K"],
+    "age_min": 0,
+    "age_max": 120,
+    "sex": "all",
+    "range_low": 3.6,
+    "range_high": 5.2,
+    "unit": "mmol/L"
+  }
+]

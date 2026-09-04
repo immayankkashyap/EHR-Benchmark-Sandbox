@@ -1,0 +1,23 @@
+# docker-compose.override.yml.example
+# Copy this file to docker-compose.override.yml for local development overrides.
+
+version: '3.8'
+
+services:
+  orchestrator:
+    environment:
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./orchestrator/app:/app/app
+
+  drug-interaction-checker:
+    volumes:
+      - ./auxiliary-tools/drug-interaction-checker/app:/app/app
+
+  lab-reference-range:
+    volumes:
+      - ./auxiliary-tools/lab-reference-range/app:/app/app
+
+  dosage-guideline:
+    volumes:
+      - ./auxiliary-tools/dosage-guideline/app:/app/app

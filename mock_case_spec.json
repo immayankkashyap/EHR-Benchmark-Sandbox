@@ -1,0 +1,55 @@
+{
+  "task_id": "MEDMCQA-CASE-001",
+  "metadata": {
+    "salted": true,
+    "snapshot_date": "2026-04-01",
+    "target_condition": "Acute Appendicitis"
+  },
+  "patient": {
+    "id": "pat-001",
+    "first_name": "Matthew",
+    "last_name": "Doe",
+    "gender": "male",
+    "birth_date": "1988-06-15"
+  },
+  "conditions": [
+    {
+      "code": "77692006",
+      "display": "Right lower quadrant abdominal pain",
+      "clinical_status": "active",
+      "recorded_date": "2026-04-01T09:00:00Z"
+    }
+  ],
+  "observations": [
+    {
+      "code": "8867-4",
+      "display": "Heart rate",
+      "value": 105,
+      "unit": "beats/minute",
+      "status": "final",
+      "effective_date_time": "2026-04-01T09:15:00Z"
+    },
+    {
+      "code": "6690-2",
+      "display": "White blood cell count",
+      "value": 14.5,
+      "unit": "10*3/uL",
+      "status": "final",
+      "effective_date_time": "2026-04-01T09:30:00Z"
+    }
+  ],
+  "medications": [
+    {
+      "code": "7052",
+      "display": "Morphine 10 MG",
+      "status": "active",
+      "authored_on": "2026-04-01T09:45:00Z"
+    }
+  ],
+  "allergies": [
+    {
+      "substance": "Penicillin",
+      "clinical_status": "active"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "task_id": "MEDMCQA-CASE-001",
+    "salted_fields": [
+      "medications[0].dosage"
+    ],
+    "snapshot_date": "2026-09-04"
+  },
+  "patient": {
+    "id": "pat-001",
+    "name": {
+      "first_name": "Matthew",
+      "last_name": "Doe"
+    },
+    "gender": "male",
+    "birthDate": "1988-06-15"
+  },
+  "conditions": [
+    {
+      "id": "cond-001",
+      "code": "77692006",
+      "display": "Right lower quadrant abdominal pain",
+      "clinical_status": "active",
+      "recorded_date": "2026-09-04T09:00:00Z"
+    }
+  ],
+  "observations": [
+    {
+      "id": "obs-001",
+      "code": "8867-4",
+      "display": "Heart rate",
+      "value": 105,
+      "unit": "beats/minute",
+      "status": "final",
+      "effective_date_time": "2026-09-04T09:15:00Z"
+    },
+    {
+      "id": "obs-002",
+      "code": "85354-9",
+      "display": "Blood pressure panel with all children optional",
+      "status": "final",
+      "effective_date_time": "2026-09-04T09:15:00Z",
+      "components": [
+        {
+          "code": "8480-6",
+          "display": "Systolic blood pressure",
+          "value": 130,
+          "unit": "mmHg"
+        },
+        {
+          "code": "8462-4",
+          "display": "Diastolic blood pressure",
+          "value": 85,
+          "unit": "mmHg"
+        }
+      ]
+    }
+  ],
+  "medications": [
+    {
+      "id": "med-001",
+      "code": "7052",
+      "display": "Morphine 10 MG",
+      "status": "active",
+      "authored_on": "2026-09-04T09:45:00Z"
+    }
+  ],
+  "allergies": [
+    {
+      "id": "all-001",
+      "substance": "Penicillin",
+      "clinical_status": "active"
+    }
+  ]
+}

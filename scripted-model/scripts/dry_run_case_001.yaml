@@ -1,0 +1,12 @@
+# Dry run action script for MEDMCQA-CASE-001 evaluation
+case_id: "MEDMCQA-CASE-001"
+steps:
+  - step: 1
+    action: "query_patient"
+    patient_id: "pat-001"
+  - step: 2
+    action: "check_drug_interaction"
+    drugs: ["Morphine", "Penicillin"]
+  - step: 3
+    action: "submit_diagnosis"
+    diagnosis: "Acute Appendicitis"

@@ -1,0 +1,36 @@
+# Environment variables
+.env
+.env*.local
+
+# Python cache & artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Database & persistent volumes
+postgres_data/
+
+# Synthea output directory (keep .gitkeep)
+synthea/output/*
+!synthea/output/.gitkeep
+
+# Application logs (keep .gitkeep)
+logs/*
+!logs/.gitkeep
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,29 @@
+[
+  {
+    "drug": "Morphine",
+    "indication": "pain",
+    "weight_min_kg": 0,
+    "weight_max_kg": 40,
+    "dosage": "0.1 mg/kg",
+    "frequency": "Every 4 hours",
+    "max_daily_dose": "15 mg"
+  },
+  {
+    "drug": "Morphine",
+    "indication": "pain",
+    "weight_min_kg": 40.1,
+    "weight_max_kg": 200,
+    "dosage": "10 mg",
+    "frequency": "Every 4 hours",
+    "max_daily_dose": "60 mg"
+  },
+  {
+    "drug": "Amoxicillin",
+    "indication": "infection",
+    "weight_min_kg": 0,
+    "weight_max_kg": 200,
+    "dosage": "500 mg",
+    "frequency": "Every 8 hours",
+    "max_daily_dose": "1500 mg"
+  }
+]
