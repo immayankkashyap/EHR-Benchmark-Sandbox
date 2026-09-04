@@ -1,31 +1,118 @@
 services:
-  hapi-fhir-jpaserver:
-    image: hapiproject/hapi:latest
-    container_name: hapi-fhir-jpaserver-start #
-    environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://hapi-fhir-postgres:5432/hapi" #
-      SPRING_DATASOURCE_USERNAME: "admin" #
-      SPRING_DATASOURCE_PASSWORD: "admin" #
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver" #
-      HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect #
-    ports:
-      - "8080:8080" #
-    depends_on:
-      hapi-fhir-postgres:
-        condition: service_healthy #
-
+  # ---------------------------------------------------------------------------
+  # Core FHIR & Database Infrastructure (Internal Only)
+  # ---------------------------------------------------------------------------
   hapi-fhir-postgres:
-    image: postgres:16-alpine #
-    container_name: hapi-fhir-postgres #
+    image: postgres:16-alpine
+    container_name: hapi-fhir-postgres
     environment:
-      POSTGRES_DB: "hapi" #
-      POSTGRES_USER: "admin" #
-      POSTGRES_PASSWORD: "admin" #
+      POSTGRES_DB: "hapi"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U admin -d hapi' || exit 1"] #
-      interval: 10s #
-      timeout: 5s #
-      start_period: 5s #
-      retries: 5 #
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U admin -d hapi' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 10
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - sandbox_internal
+
+  hapi-fhir-jpaserver:
+    image: hapiproject/hapi:latest
+    container_name: hapi-fhir-jpaserver
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://hapi-fhir-postgres:5432/hapi"
+      SPRING_DATASOURCE_USERNAME: "admin"
+      SPRING_DATASOURCE_PASSWORD: "admin"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+      HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+    ports:
+      - "8080:8080"
+    depends_on:
+      hapi-fhir-postgres:
+        condition: service_healthy
+    networks:
+      - sandbox_internal
+
+  # ---------------------------------------------------------------------------
+  # Phase 2 Auxiliary Reference Microservices (Internal Only)
+  # ---------------------------------------------------------------------------
+  drug-interaction-checker:
+    build:
+      context: ./auxiliary-tools/drug-interaction-checker
+      dockerfile: Dockerfile
+    container_name: drug-interaction-checker
+    ports:
+      - "8001:8000"
+    networks:
+      - sandbox_internal
+
+  lab-reference-range:
+    build:
+      context: ./auxiliary-tools/lab-reference-range
+      dockerfile: Dockerfile
+    container_name: lab-reference-range
+    ports:
+      - "8002:8000"
+    networks:
+      - sandbox_internal
+
+  dosage-guideline:
+    build:
+      context: ./auxiliary-tools/dosage-guideline
+      dockerfile: Dockerfile
+    container_name: dosage-guideline
+    ports:
+      - "8003:8000"
+    networks:
+      - sandbox_internal
+
+  # ---------------------------------------------------------------------------
+  # Phase 3 Orchestrator Service (Internal + Proxy External)
+  # ---------------------------------------------------------------------------
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    environment:
+      HTTP_PROXY: "http://egress-proxy:3128"
+      HTTPS_PROXY: "http://egress-proxy:3128"
+      http_proxy: "http://egress-proxy:3128"
+      https_proxy: "http://egress-proxy:3128"
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - egress-proxy
+      - hapi-fhir-jpaserver
+    networks:
+      - sandbox_internal
+      - proxy_external
+
+  # ---------------------------------------------------------------------------
+  # Phase 5 Egress Proxy Service (External Only)
+  # ---------------------------------------------------------------------------
+  egress-proxy:
+    build:
+      context: ./networks/egress-proxy
+      dockerfile: Dockerfile
+    container_name: egress-proxy
+    ports:
+      - "3128:3128"
+    networks:
+      - proxy_external
+
+# ---------------------------------------------------------------------------
+# Network Topologies
+# ---------------------------------------------------------------------------
+networks:
+  sandbox_internal:
+    internal: true
+    driver: bridge
+  proxy_external:
+    driver: bridge
