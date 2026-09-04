@@ -13,6 +13,19 @@ from app.schemas.fhir_tools import query_fhir_resource_schema
 from app.schemas.auxiliary_tools import auxiliary_tool_schemas
 from app.router import route_tool_call
 from app.logging.trajectory_logger import TrajectoryLogger
+import importlib.util
+import os
+
+try:
+    script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripted-model', 'scripted_agent.py'))
+    if not os.path.exists(script_path):
+        script_path = "/app/scripted-model/scripted_agent.py"
+    spec = importlib.util.spec_from_file_location("scripted_agent", script_path)
+    scripted_agent_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scripted_agent_module)
+    ScriptedAgent = scripted_agent_module.ScriptedAgent
+except Exception as e:
+    ScriptedAgent = None
 
 logger = logging.getLogger(__name__)
 logger_instance = TrajectoryLogger()
@@ -20,12 +33,16 @@ logger_instance = TrajectoryLogger()
 # Assemble all tools for OpenAI function calling
 ALL_TOOLS = [query_fhir_resource_schema] + auxiliary_tool_schemas
 
-def _call_llm_api_mock(messages: list, tools: list) -> Dict[str, Any]:
+def _call_llm_api_mock(messages: list, tools: list, provider: str) -> Dict[str, Any]:
     """
     Simulated LLM response for demonstration.
     In a real implementation, this wraps the `openai.ChatCompletion.create` call
     using the api keys from the environment.
     """
+    if provider == "scripted_agent" and ScriptedAgent:
+        agent = ScriptedAgent()
+        return agent.generate_next_turn(messages)
+        
     return {
         "message": {
             "role": "assistant",
@@ -52,7 +69,7 @@ def execute_agent_loop(task_id: str, case_context: str, model_provider: str) -> 
         logger.info("Turn %d for run_id %s", turns, run_id)
         
         # 1. Call LLM (abstracted behind mock for sandbox isolation)
-        response = _call_llm_api_mock(messages, ALL_TOOLS)
+        response = _call_llm_api_mock(messages, ALL_TOOLS, model_provider)
         message = response.get("message", {})
         
         # 2. Append LLM response to history

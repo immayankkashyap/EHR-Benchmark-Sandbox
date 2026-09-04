@@ -83,10 +83,12 @@ services:
       HTTPS_PROXY: "http://egress-proxy:3128"
       http_proxy: "http://egress-proxy:3128"
       https_proxy: "http://egress-proxy:3128"
+      PYTHONPATH: "/app"
     ports:
       - "8000:8080"
     volumes:
       - ./logs:/app/logs
+      - ./scripted-model:/app/scripted-model
     depends_on:
       - egress-proxy
       - hapi-fhir-jpaserver
