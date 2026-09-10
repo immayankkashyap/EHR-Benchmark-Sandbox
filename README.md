@@ -11,7 +11,7 @@ benchmark: reviewed clinical chart narratives have not been supplied.
 ## Start the EHR
 
 ```sh
-docker compose -f docker-compose.yml -f benchmark-ehr/compose.yml up -d --build ehr-viewer
+docker compose -f docker-compose.yml up -d --build ehr-viewer
 ```
 
 For browser access, run the trusted host viewer separately:
@@ -113,6 +113,121 @@ logs and `report.json` under a new `evaluation-private/runs/` directory. Use
 `--output evaluation-private/runs/my-test` to choose a fresh output directory.
 Scoring requires the evaluator's private answer key, as for offline runs.
 
+The wrapper prints and saves **cumulative scores every 10 attempted cases**,
+including failed cases, and after the final partial batch. `report.json` and
+`report.md` always contain the latest checkpoint. Historical checkpoints are saved
+as `scores/after-0010.json`, `scores/after-0020.json`, etc., with matching Markdown
+files. Change the interval with `--score-every N`. Logs are stored under
+`logs/batch-0001/`, `logs/batch-0002/`, etc.; the scorer reads them recursively.
+Previously saved checkpoints remain available if a later batch is interrupted.
+The host scores between batches; scores and answer keys are never sent to models.
+
+Final answers should be bare JSON, such as `{"choice":"B","choice_set":"standalone"}`.
+The scorer also accepts a single final Markdown JSON code block, optionally preceded
+by reasoning. It does not infer choices from reasoning text or accept multiple code
+blocks, trailing prose, or conflicting choice/text fields. Existing logs can be
+rescored without making model API calls:
+
+```sh
+python3 scripts/benchmark.py score --logs evaluation-private/runs/RUN_ID/logs --output evaluation-private/runs/RUN_ID/report-rescored.json
+```
+
+This behavior applies to `scripts/benchmark.py run` and `smoke`; the lower-level
+`benchmark-runner/run.py` only produces logs.
+
+### Gemma 4 26B with default reasoning
+
+The Gemini API model ID is `gemma-4-26b-a4b-it`. Google's live model metadata
+reported `outputTokenLimit: 32768` and `inputTokenLimit: 262144` on September 10,
+2026. The commands below use the maximum **32,768 output tokens** and leave the
+provider's reasoning setting at its default. The input limit is separate and
+should not be used as the output budget.
+
+```sh
+export GEMINI_API_KEY='YOUR_API_KEY'
+
+# Test one case.
+python3 scripts/benchmark.py run --provider gemini --model gemma-4-26b-a4b-it \
+  --cases 1 --max-tokens 32768 --timeout 1200
+
+# Run the remaining cases, saving cumulative scores every 10 cases.
+python3 scripts/benchmark.py run --provider gemini --model gemma-4-26b-a4b-it \
+  --cases 2-500 --max-tokens 32768 --timeout 1200 --score-every 10
+
+# Or run all 500 cases in one evaluation.
+python3 scripts/benchmark.py run --provider gemini --model gemma-4-26b-a4b-it \
+  --cases 1-500 --max-tokens 32768 --timeout 1200 --score-every 10
+```
+
+In the September 10, 2026 case-1 test, task retrieval succeeded, but default
+reasoning produced repeated thought text without a valid final answer at the
+earlier 16,384-token budget. The scorer recorded `unrecognized_answer`; the test took about 5.8 minutes.
+Increasing the budget does not guarantee that a model will return a valid answer.
+
+### Output-token limit errors and suggested fix
+
+When a provider reports that generation reached its output-token limit, the
+benchmark immediately prints an error instead of silently accepting empty,
+reasoning-only, or truncated output. For example:
+
+```text
+mxq-0001: ERROR output_token_limit: Provider stopped at the output-token limit (--max-tokens 16384). No final answer was accepted. Increase --max-tokens within the model limit and increase --timeout if needed, then retry this case. Repeated reasoning may still exhaust a larger budget; reasoning settings are unchanged.
+```
+
+The case is recorded as `output_token_limit` in its run log and the report's
+`answer_status_counts`. It counts as an unsuccessful attempt, and the run exits
+with a nonzero status after processing the selected cases. Truncated tool calls
+are not executed. Token usage returned by the provider is retained in the log.
+Scores continue to save every 10 attempted cases and at the end.
+
+**Suggested fix:** increase the output budget within the model's supported limit
+and retest one case before launching the full suite. For example, if the model
+supports a 32,768-token output budget:
+
+```sh
+python3 scripts/benchmark.py run --provider gemini --model gemma-4-26b-a4b-it \
+  --cases 1 --max-tokens 32768 --timeout 1200
+```
+
+This keeps default reasoning enabled. A larger token budget allows more reasoning
+and answer text; a larger timeout only gives the request more time and does not
+increase the token budget. Persistent repetitive reasoning may still fail at a
+larger limit; try another model if necessary. No automatic retry or reasoning
+change is performed.
+
+Detection uses the provider's termination signal: Chat Completions
+[`finish_reason: length`](https://platform.openai.com/docs/api-reference/chat/object)
+or Anthropic
+[`stop_reason: max_tokens`](https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons).
+If the provider does not report truncation, the benchmark cannot reliably infer
+it from answer length alone; other empty/invalid-answer statuses still apply.
+Historical logs, including the Gemma test above, are not relabeled retroactively.
+
+### Rate limiting and retries
+
+API requests automatically retry HTTP 429, 500, 502, 503, and 504 responses,
+connection failures, and timeouts up to five times. Backoff starts at 2 seconds,
+doubles up to 60 seconds, and uses jitter between half and all of each delay.
+`Retry-After` (seconds or HTTP date) is honored even when it exceeds that cap.
+Retries print sanitized progress to stderr without provider response bodies or keys.
+
+Use `--requests-per-minute` to space all API attempts, including tool turns and
+retries. Choose a rate appropriate for your account; pacing is disabled by default.
+For example:
+
+```sh
+python3 scripts/benchmark.py run --provider gemini --model gemini-2.5-flash --cases 1-10 --max-tokens 200000 --timeout 600 --score-every 10 --requests-per-minute 10
+```
+
+Controls: `--max-retries 5` (0 disables retries), `--retry-base-delay 2`, and
+`--retry-max-delay 60`. `--timeout` applies to each attempt; waiting and retries
+can extend total runtime. Pacing is local to each runner process and resets at
+score batch boundaries; it does not coordinate other processes using the same key
+or enforce token/daily quotas. Exhausted retries still mark the case `model_error`.
+
+### API controls
+
+
 Optional controls: `--max-turns 10`, `--max-tool-calls 20`, `--timeout 120`
 (seconds per request), and `--max-tokens 4096` (output budget per turn, including
 reasoning where applicable). Increase the timeout and token budget for reasoning
@@ -145,5 +260,10 @@ docker build --pull=false -t ehr-isolation-probe security-tests/model-probe
 PDF integration tests skip when the private source PDF is absent. Runtime checks
 require a running EHR container and Docker access, and fail if either is missing.
 
-The old FHIR stack and demonstration orchestrator are available only through the
-`legacy` Compose profile. They are not part of the supported secure runner.
+The Compose configuration contains only the optional read-only EHR viewer.
+
+## Rubric weights
+
+Rubric `ehr-offline-v3` assigns 80 points to answer correctness, 10 to question
+retrieval, 5 to tool execution, 2.5 to patient scope, and 2.5 to retrieval efficiency.
+Accuracy is unchanged. Existing reports retain their original weights until rescored.

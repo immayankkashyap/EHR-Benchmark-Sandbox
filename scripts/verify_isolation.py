@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-COMPOSE = ['docker','compose','-f','docker-compose.yml','-f','benchmark-ehr/compose.yml']
+COMPOSE = ['docker','compose','-f','docker-compose.yml']
 
 def output(command):
     return subprocess.check_output(command, cwd=ROOT, text=True)

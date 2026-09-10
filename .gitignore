@@ -18,17 +18,6 @@ htmlcov/
 venv/
 env/
 
-# Database & persistent volumes
-postgres_data/
-
-# Synthea output directory (keep .gitkeep)
-synthea/output/*
-!synthea/output/.gitkeep
-
-# Application logs (keep .gitkeep)
-logs/*
-!logs/.gitkeep
-
 # OS & Editor files
 .DS_Store
 Thumbs.db

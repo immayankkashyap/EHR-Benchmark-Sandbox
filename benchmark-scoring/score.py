@@ -16,6 +16,13 @@ def answer_score(answer, key, convention='standalone'):
     value = answer
     if isinstance(value, str):
         stripped = value.strip()
+        # Accept a single terminal JSON fence, optionally after a rationale.
+        # Never extract choice letters from prose or choose between JSON answers.
+        fenced = re.search(r'(?:^|\n)```(?:json)?[ \t]*\r?\n(.*?)\r?\n```\s*\Z', stripped, re.S)
+        if fenced and stripped.count('```') == 2:
+            prefix = stripped[:fenced.start()]
+            if not re.search(r'"(?:choice|answer_text)"\s*:', prefix):
+                stripped = fenced[1].strip()
         try:
             value = json.loads(stripped) if stripped.startswith('{') else stripped
         except (ValueError, TypeError):
@@ -154,7 +161,9 @@ def score_run(events, key, convention):
     starts = [e for e in events if e.get('type') == 'run_start']
     ends = [e for e in events if e.get('type') == 'run_end']
     invalid_end = bool(ends and ends[-1].get('status') != 'completed')
-    if len(final) != 1 or invalid_end:
+    if ends and ends[-1].get('status') == 'output_token_limit':
+        accuracy = {'correct': False, 'answer_status': 'output_token_limit'}
+    elif len(final) != 1 or invalid_end:
         accuracy = {'correct': False, 'answer_status': 'failed_or_incomplete_run' if len(final)<2 else 'multiple_final_answers'}
     else:
         accuracy = answer_score(final[0].get('answer'), key['cases'][task], convention)
@@ -163,6 +172,12 @@ def score_run(events, key, convention):
     result = {'run_id': events[0]['run_id'], 'task_id': task,
             'model': starts[0].get('model', starts[0].get('model_provider','unknown')) if starts else 'unknown',
             **accuracy, **tool_metrics(before_final, task, key['cases'][task]['question_sha256'])}
+    result['answer_given'] = final[0].get('answer') if len(final) == 1 else None
+    result['correct_answer'] = {
+        'choice': key['cases'][task]['correct_choice'],
+        'choice_set': 'standalone',
+        'answer_text': key['cases'][task]['correct_text'],
+    }
     result['task_type'] = key['cases'][task].get('task_type','unspecified')
     result['body_system'] = key['cases'][task].get('body_system','unspecified')
     result['elapsed_ms'] = ends[-1].get('elapsed_ms') if ends else None
@@ -215,13 +230,18 @@ def summarize(rows, total_cases):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--key', type=Path, default=Path('evaluation-private/answer-key.json'))
+    p.add_argument('--key', type=Path, default=Path(__file__).resolve().parents[1]/'evaluation-private/answer-key.json')
     p.add_argument('--logs', type=Path, required=True)
     p.add_argument('--output', type=Path, default=Path('evaluation-private/report.json'))
     p.add_argument('--choice-set', choices=['standalone','inline'], default='standalone')
     args = p.parse_args()
-    key = json.loads(args.key.read_text())
-    files = sorted(args.logs.glob('*.jsonl')) if args.logs.is_dir() else [args.logs]
+    try:
+        key = json.loads(args.key.read_text())
+    except (OSError, ValueError) as exc:
+        p.error(f'Cannot load answer key {args.key}: {exc}. Restore the original key or '
+                'use --key PATH. Rebuild from the source PDF with benchmark-scoring/build_key.py; '
+                'saved model logs can be rescored without rerunning inference.')
+    files = sorted(args.logs.rglob('*.jsonl')) if args.logs.is_dir() else [args.logs]
     grouped = defaultdict(list)
     for path in files:
         for line_number, line in enumerate(path.read_text().splitlines(), 1):

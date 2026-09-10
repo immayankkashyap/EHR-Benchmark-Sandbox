@@ -34,6 +34,23 @@ def call(turn=1, raw=None):
     return event('tool_call',turn=turn,tool_name='read_ehr',arguments={'patient_id':'mxq-0001','resource_type':'DocumentReference'}, raw_response={'fhir':NOTE} if raw is None else raw,latency_ms=5)
 
 class ScoringTests(unittest.TestCase):
+    def test_token_limit_has_separate_report_status(self):
+        events = [event('run_start', model='test'), event('run_end', status='output_token_limit')]
+        row = score_run(events, {'cases': {'mxq-0001': KEY}}, 'standalone')
+        self.assertFalse(row['correct'])
+        self.assertEqual(row['answer_status'], 'output_token_limit')
+        self.assertEqual(summarize([row], 500)['test']['answer_status_counts'], {'output_token_limit': 1})
+
+    def test_report_includes_submitted_and_correct_answers(self):
+        submitted = '```json\n{"choice":"A"}\n```'
+        for finals, expected in [([], None), ([event('final_answer', answer=submitted)], submitted),
+                                 ([event('final_answer', answer='A'), event('final_answer', answer='B')], None)]:
+            row = score_run([event('run_start', model='test'), *finals,
+                             event('run_end', status='completed')], {'cases': {'mxq-0001': KEY}}, 'inline')
+            self.assertEqual(row['answer_given'], expected)
+            self.assertEqual(row['correct_answer'], {'choice': 'B', 'choice_set': 'standalone',
+                                                     'answer_text': 'Second option'})
+
     def test_choices_use_explicit_list(self):
         self.assertFalse(answer_score('A',KEY)['correct'])
         self.assertTrue(answer_score({'choice':'A','choice_set':'inline'},KEY)['correct'])
@@ -43,6 +60,27 @@ class ScoringTests(unittest.TestCase):
         self.assertFalse(answer_score('Maybe A or B. Second option',KEY)['correct'])
         self.assertFalse(answer_score({'choice':'Z'},KEY)['correct'])
         self.assertFalse(answer_score({'choice':'B','choice_set':'unknown'},KEY)['correct'])
+
+    def test_fenced_final_json(self):
+        answer = '{"choice":"B","choice_set":"standalone"}'
+        for prefix in ('', 'I considered A and B.\n\n'):
+            for language in ('json', ''):
+                with self.subTest(prefix=prefix, language=language):
+                    self.assertTrue(answer_score(prefix + '```' + language + '\n' + answer + '\n```', KEY)['correct'])
+        for answer, status in [('{"choice":"Z"}', 'unmapped_choice'),
+                               ('{"choice":"B","choice_set":"bad"}', 'invalid_choice_set'),
+                               ('{"choice":"B","answer_text":"First option"}', 'conflicting_choice_and_text')]:
+            self.assertEqual(answer_score('```json\n' + answer + '\n```', KEY)['answer_status'], status)
+
+    def test_ambiguous_or_nonterminal_fences_are_not_mined(self):
+        block = '```json\n{"choice":"B"}\n```'
+        for answer in (block + '\nActually A.', block + '\n' + block,
+                       '{"choice":"A"}\n' + block,
+                       '```json\nnot JSON; answer B\n```',
+                       '```python\n{"choice":"B"}\n```',
+                       'I considered A, but B is correct.'):
+            with self.subTest(answer=answer):
+                self.assertEqual(answer_score(answer, KEY)['answer_status'], 'unrecognized_answer')
 
     def test_multiple_calls_in_one_turn_and_retrieval(self):
         events=[call(),call(),call(2,{'error':'failed'})]
@@ -73,6 +111,12 @@ class ScoringTests(unittest.TestCase):
         events=[event('run_start',model='test-model'),event('model_turn',turn=1),call(),event('model_turn',turn=2),event('final_answer',answer='B'),event('run_end',status='completed')]
         row=score_run(events,{'cases':{'mxq-0001':KEY}},'standalone')
         self.assertEqual(row['rubric']['total'],100)
+        self.assertEqual(row['rubric']['version'], 'ehr-offline-v3')
+        self.assertEqual(row['rubric']['points']['answer_agreement'], 80)
+        wrong = score_run([event('run_start', model='test'), call(),
+                           event('final_answer', answer='A'), event('run_end', status='completed')],
+                          {'cases': {'mxq-0001': KEY}}, 'standalone')
+        self.assertEqual(wrong['rubric']['total'], 20)
         self.assertEqual(row['model_turns'],2)
         self.assertEqual(summarize([row],500)['test-model']['accuracy_over_full_dataset'],1/500)
         self.assertIsNone(summarize([row,row],500)['test-model']['accuracy_over_full_dataset'])
@@ -82,7 +126,7 @@ class ScoringTests(unittest.TestCase):
 
     def test_no_retrieval_after_final_credit(self):
         row=score_run([event('final_answer',answer='B'),call()],{'cases':{'mxq-0001':KEY}},'standalone')
-        self.assertEqual(row['rubric']['total'],60)
+        self.assertEqual(row['rubric']['total'],80)
         self.assertFalse(row['question_retrieved'])
 
     @unittest.skipUnless((ROOT/'medxpertqa_salted_500_curated.pdf').exists(), 'Source PDF is not present')

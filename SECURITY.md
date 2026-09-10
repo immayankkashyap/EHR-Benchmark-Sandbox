@@ -32,7 +32,7 @@ The build context explicitly excludes all unneeded files.
 answer sections. Only the trusted runner reads these files. `evaluation-private/`
 contains the key, scores and run logs; none are mounted into model containers.
 Scoring runs after model execution and is not a model tool. Source PDFs, Git
-history, host files and old database contents remain on the trusted host.
+history and host files remain on the trusted host.
 Do not grant a model host shell access or launch it directly in this checkout.
 
 ## Dataset limitation
@@ -48,14 +48,12 @@ cannot establish that a clinical narrative has no answer leakage.
 
 ## Deployment and verification
 
-Run `docker compose -f docker-compose.yml -f benchmark-ehr/compose.yml up -d --build ehr-viewer`
+Run `docker compose -f docker-compose.yml up -d --build ehr-viewer`
 and `bash scripts/verify_isolation.sh`. The latter fails on missing containers,
 missing Docker access or failed probes; a failed command is never considered
 proof of blocked traffic. Run the unit checks documented in README as well.
-Stop old legacy services before evaluating; existing containers do not inherit
-new configuration until recreated. Legacy FHIR tooling is behind the explicit
-`legacy` profile, is outside the strict evaluation path, and must not be exposed
-to model code. The historical proxy now denies all traffic.
+The Compose configuration includes only the read-only EHR viewer; the legacy
+FHIR database, auxiliary services, orchestrator, and proxy have been removed.
 
 Docker isolation does not protect against a compromised host/kernel/runtime or
 answers memorized in model weights or deliberately baked into an image. For

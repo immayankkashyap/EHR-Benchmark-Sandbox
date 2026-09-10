@@ -1,127 +1,19 @@
 services:
-  # ---------------------------------------------------------------------------
-  # Core FHIR & Database Infrastructure (Internal Only)
-  # ---------------------------------------------------------------------------
-  hapi-fhir-postgres:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    image: postgres:16-alpine
-    container_name: hapi-fhir-postgres
-    environment:
-      POSTGRES_DB: "hapi"
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "admin"
-    healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U admin -d hapi' || exit 1"]
-      interval: 5s
-      timeout: 5s
-      start_period: 5s
-      retries: 10
+  ehr-viewer:
+    build: ./benchmark-ehr
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
-    networks:
-      - sandbox_internal
-
-  hapi-fhir-jpaserver:
-    profiles: [legacy]
+      - ./benchmark-ehr/generated:/data:ro
+    read_only: true
+    cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    image: hapiproject/hapi:latest
-    container_name: hapi-fhir-jpaserver
-    environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://hapi-fhir-postgres:5432/hapi"
-      SPRING_DATASOURCE_USERNAME: "admin"
-      SPRING_DATASOURCE_PASSWORD: "admin"
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
-      HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
-    ports:
-      - "127.0.0.1:8080:8080"
-    depends_on:
-      hapi-fhir-postgres:
-        condition: service_healthy
-    networks:
-      - sandbox_internal
+    pids_limit: 64
+    mem_limit: 256m
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    restart: unless-stopped
+    networks: [ehr_readonly]
 
-  # ---------------------------------------------------------------------------
-  # Phase 2 Auxiliary Reference Microservices (Internal Only)
-  # ---------------------------------------------------------------------------
-  drug-interaction-checker:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    build:
-      context: ./auxiliary-tools/drug-interaction-checker
-      dockerfile: Dockerfile
-    container_name: drug-interaction-checker
-    ports:
-      - "127.0.0.1:8001:8000"
-    networks:
-      - sandbox_internal
-
-  lab-reference-range:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    build:
-      context: ./auxiliary-tools/lab-reference-range
-      dockerfile: Dockerfile
-    container_name: lab-reference-range
-    ports:
-      - "127.0.0.1:8002:8000"
-    networks:
-      - sandbox_internal
-
-  dosage-guideline:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    build:
-      context: ./auxiliary-tools/dosage-guideline
-      dockerfile: Dockerfile
-    container_name: dosage-guideline
-    ports:
-      - "127.0.0.1:8003:8000"
-    networks:
-      - sandbox_internal
-
-  # ---------------------------------------------------------------------------
-  # Phase 3 Orchestrator Service (Internal + Proxy External)
-  # ---------------------------------------------------------------------------
-  orchestrator:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    build:
-      context: ./orchestrator
-      dockerfile: Dockerfile
-    container_name: orchestrator
-    environment:
-      PYTHONPATH: "/app"
-    ports:
-      - "127.0.0.1:8000:8080"
-    volumes:
-      - ./logs:/app/logs
-      - ./scripted-model:/app/scripted-model:ro
-    depends_on:
-      - hapi-fhir-jpaserver
-    networks:
-      - sandbox_internal
-
-  # ---------------------------------------------------------------------------
-  # Phase 5 Egress Proxy Service (External Only)
-  # ---------------------------------------------------------------------------
-  egress-proxy:
-    profiles: [legacy]
-    security_opt: [no-new-privileges:true]
-    build:
-      context: ./networks/egress-proxy
-      dockerfile: Dockerfile
-    container_name: egress-proxy
-    ports:
-      - "127.0.0.1:3128:3128"
-    network_mode: none
-
-# ---------------------------------------------------------------------------
-# Network Topologies
-# ---------------------------------------------------------------------------
 networks:
-  sandbox_internal:
+  ehr_readonly:
     internal: true
-    driver: bridge
-  proxy_external:
     driver: bridge
