@@ -1,6 +1,6 @@
 # Security boundary
 
-The supported evaluation path is `scripts/benchmark.py run --model-image sha256:…`.
+The offline evaluation path is `scripts/benchmark.py run --model-image sha256:…`.
 The host runner and offline scorer are trusted. Model code runs in a fresh container
 for each turn with `--network=none`, no host mounts, no passed credentials, a
 non-root UID, all capabilities dropped, no new privileges, a read-only root,
@@ -62,8 +62,21 @@ answers memorized in model weights or deliberately baked into an image. For
 hostile third-party images, use a dedicated disposable VM or stronger runtime
 isolation on a separate machine with no evaluator secrets. A remote inference
 provider cannot be verified to perform no hidden retrieval, so remote API runs
-are disabled by the supported strict CLI. Local source data and image supply
+do not provide the offline isolation guarantee. Local source data and image supply
 chains remain trusted inputs requiring review.
 
 Implementation references: [Docker network isolation](https://docs.docker.com/engine/network/)
 and [Compose service security controls](https://docs.docker.com/reference/compose-file/services/).
+
+## Remote API evaluations
+
+`run --provider PROVIDER --model MODEL_ID` explicitly selects host-side HTTPS
+inference. The provider receives the conversation, assigned task and any chart
+resources retrieved through the two validated tools. Credentials are read from
+host environment variables and sent only in authentication headers. The adapter
+does not send answer keys, scores or other host files, and provider errors are
+logged without response bodies or credentials. No provider web search or code
+execution tools are enabled. Tool scope validation and host-only scoring apply
+to both transports. API runs are labeled `remote-api` in run metadata; they must
+not be represented as offline-isolated evaluations. Custom `--base-url` endpoints
+receive the selected provider credential and must be trusted.

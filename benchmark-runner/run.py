@@ -1,4 +1,4 @@
-"""Model-only runner: no imports or reads from the private evaluator directory."""
+"""Benchmark runner with offline containers or explicit remote API inference."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -127,6 +127,9 @@ def run_case(task, model, viewer, log_dir, model_name, max_turns=10, max_calls=2
     except Exception as exc:
         status = 'model_error'
         emit('run_error', error=type(exc).__name__, http_status=getattr(exc, 'status_code', None))
+        http_status = getattr(exc, 'status_code', None)
+        if isinstance(http_status, int):
+            print(f'{task}: model API returned HTTP {http_status}', file=sys.stderr)
     finally:
         emit('run_end', status=status, elapsed_ms=(time.perf_counter()-start)*1000, tool_calls=calls)
     return {'task_id':task, 'run_id':run_id, 'status':status, 'log':str(path)}
@@ -134,16 +137,30 @@ def run_case(task, model, viewer, log_dir, model_name, max_turns=10, max_calls=2
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--model-image', help='Local immutable Docker image ID for offline execution')
+    from providers import APIModel, PROVIDERS, ALIASES
+    transport = p.add_mutually_exclusive_group(required=True)
+    transport.add_argument('--model-image', help='Local immutable Docker image ID for offline execution')
+    transport.add_argument('--provider', choices=sorted(set(PROVIDERS) | set(ALIASES)))
+    p.add_argument('--model', help='Exact provider model ID (required for API runs)')
+    p.add_argument('--base-url', help='Override provider HTTPS API base URL, e.g. for a regional endpoint')
+    p.add_argument('--max-tokens', type=int, default=4096, help='API output token budget per turn')
     p.add_argument('--cases', default='1-500', help='Comma-separated numbers/ranges, e.g. 1-10,25')
     p.add_argument('--logs', type=Path, required=True)
     p.add_argument('--max-turns', type=int, default=10)
     p.add_argument('--max-tool-calls', type=int, default=20)
     p.add_argument('--timeout', type=float, default=120)
-    p.add_argument('--smoke', action='store_true', help='No model API; always chooses A after one EHR retrieval')
+    transport.add_argument('--smoke', action='store_true', help='No model API; always chooses A after one EHR retrieval')
     args = p.parse_args()
-    if not args.smoke and not args.model_image:
-        p.error('--model-image is required: remote model APIs are disabled in strict mode')
+    if args.provider and not args.model:
+        p.error('--model is required with --provider')
+    if not args.provider and (args.model or args.base_url or args.max_tokens != 4096):
+        p.error('--model, --base-url and --max-tokens require --provider')
+    try:
+        from isolated import IsolatedModel
+        model = (APIModel(args.provider, args.model, args.timeout, args.max_tokens, args.base_url)
+                 if args.provider else smoke_model if args.smoke else IsolatedModel(args.model_image, args.timeout))
+    except ValueError as exc:
+        p.error(str(exc))
     if args.max_turns < 1 or args.max_tool_calls < 1 or args.timeout <= 0:
         p.error('Budgets and timeout must be positive')
     selected = set()
@@ -162,13 +179,17 @@ def main():
     tasks = [f'mxq-{n:04d}' for n in sorted(selected)]
     if set(tasks)-available:
         p.error('Some requested patients are missing; run benchmark setup first')
-    model_name = 'smoke-always-A-NOT-A-MODEL' if args.smoke else args.model_image
-    from isolated import IsolatedModel
-    model = smoke_model if args.smoke else IsolatedModel(args.model_image, args.timeout)
+    model_name = (f'{model.provider}/{args.model}' if args.provider else
+                  'smoke-always-A-NOT-A-MODEL' if args.smoke else args.model_image)
+    config = {'transport': 'remote-api' if args.provider else 'smoke' if args.smoke else 'offline-container',
+              'smoke': args.smoke}
+    if args.provider:
+        config.update(provider=model.provider, model=args.model, max_tokens=args.max_tokens, timeout=args.timeout,
+                      base_url=model.base_url)
     results = []
     for task in tasks:
         result = run_case(task, model, '', args.logs, model_name, args.max_turns, args.max_tool_calls,
-                          {'transport':'offline-container', 'smoke':args.smoke})
+                          config)
         results.append(result)
         print(f"{task}: {result['status']}", flush=True)
     if any(r['status'] != 'completed' for r in results):
