@@ -34,3 +34,6 @@ logs/*
 Thumbs.db
 .vscode/
 .idea/
+
+# Evaluator ground truth and reports: never mount into model containers
+/evaluation-private/

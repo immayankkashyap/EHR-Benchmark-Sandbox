@@ -1,0 +1,204 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "mxq-0115",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
+              "code": "medxpertqa-salted-500-curated"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
+              "code": "mxq-0115"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/data-origin",
+              "code": "synthetic-administrative-metadata"
+            }
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://healthcare-ehr-sandbox.local/tags/mrn",
+            "value": "MXQ-0115"
+          }
+        ],
+        "name": [
+          {
+            "text": "Synthetic Patient 0115"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/mxq-0115"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "mxq-0115-doctor",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
+              "code": "medxpertqa-salted-500-curated"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
+              "code": "mxq-0115"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/data-origin",
+              "code": "synthetic-administrative-metadata"
+            }
+          ]
+        },
+        "name": [
+          {
+            "text": "Dr. Alex Morgan 0115 (synthetic)"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Practitioner/mxq-0115-doctor"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "mxq-0115-hospital",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
+              "code": "medxpertqa-salted-500-curated"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
+              "code": "mxq-0115"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/data-origin",
+              "code": "synthetic-administrative-metadata"
+            }
+          ]
+        },
+        "name": "Benchmark General Hospital (synthetic)"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Organization/mxq-0115-hospital"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "mxq-0115-visit",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
+              "code": "medxpertqa-salted-500-curated"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
+              "code": "mxq-0115"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/data-origin",
+              "code": "synthetic-administrative-metadata"
+            }
+          ]
+        },
+        "status": "in-progress",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "VR",
+          "display": "virtual"
+        },
+        "subject": {
+          "reference": "Patient/mxq-0115"
+        },
+        "period": {
+          "start": "2025-04-25T09:00:00Z"
+        },
+        "participant": [
+          {
+            "individual": {
+              "reference": "Practitioner/mxq-0115-doctor"
+            }
+          }
+        ],
+        "serviceProvider": {
+          "reference": "Organization/mxq-0115-hospital"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/mxq-0115-visit"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "mxq-0115-note",
+        "meta": {
+          "tag": [
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
+              "code": "medxpertqa-salted-500-curated"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
+              "code": "mxq-0115"
+            },
+            {
+              "system": "http://healthcare-ehr-sandbox.local/tags/data-origin",
+              "code": "synthetic-administrative-metadata"
+            }
+          ]
+        },
+        "status": "current",
+        "type": {
+          "text": "Original benchmark question"
+        },
+        "subject": {
+          "reference": "Patient/mxq-0115"
+        },
+        "date": "2025-04-25T09:00:00Z",
+        "author": [
+          {
+            "reference": "Practitioner/mxq-0115-doctor"
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "Encounter/mxq-0115-visit"
+            }
+          ]
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "title": "Question 115 — original text and unmarked choices",
+              "data": "QSAzNC15ZWFyLW9sZCBmZW1hbGUgcHJlc2VudHMgd2l0aCBhIGdlbmVyYWxpemVkIHJhc2ggb2YgNSBkYXlzJyBkdXJhdGlvbiwgYWNjb21wYW5pZWQgYnkgbWlsZCBmZXZlciwKaGVhZGFjaGUsIGFuZCBtdXNjbGUgYWNoZXMgb3ZlciB0aGUgcGFzdCBtb250aC4gU2hlIGhhcyBubyBzaWduaWZpY2FudCBtZWRpY2FsIGhpc3RvcnkuIEhlciBzb2NpYWwKaGlzdG9yeSBpbmNsdWRlcyBzbW9raW5nIG9uZSBwYWNrIG9mIGNpZ2FyZXR0ZXMgZGFpbHksIHdlZWtlbmQgYmluZ2UgZHJpbmtpbmcsIGFuZCBvY2Nhc2lvbmFsIGNvY2FpbmUKdXNlLiBIZXIgdml0YWwgc2lnbnMgYXJlIG5vcm1hbC4gUGh5c2ljYWwgZmluZGluZ3MgaW5jbHVkZSBhIHdpZGVzcHJlYWQsIHN5bW1ldHJpYywgcmVkZGlzaC1icm93bgpwYXB1bGFyIHJhc2ggb24gaGVyIHRydW5rLCB1cHBlciBleHRyZW1pdGllcywgYW5kIHBhbG1zLCBhbG9uZyB3aXRoIGdlbmVyYWxpemVkIG5vbi10ZW5kZXIKbHltcGhhZGVub3BhdGh5LiBTaGUgYWxzbyBleGhpYml0cyBwYXRjaHkgc2NhbHAgYWxvcGVjaWEgYW5kIG11bHRpcGxlIGZsYXQsIGJyb2FkLWJhc2VkLCB3YXJ0bGlrZQpwYXB1bGVzIGluIHRoZSBhbm9nZW5pdGFsIHJlZ2lvbi4gQm90aCByYXBpZCBwbGFzbWEgcmVhZ2luIGFuZCBmbHVvcmVzY2VudCB0cmVwb25lbWFsIGFudGlib2R5IHRlc3RzCmFyZSBwb3NpdGl2ZS4gQWZ0ZXIgaW5pdGlhdGluZyBhcHByb3ByaWF0ZSB0cmVhdG1lbnQsIHdoYXQgaXMgdGhlIG1vc3QgYXBwcm9wcmlhdGUgbmV4dCBzdGVwIGluCm1hbmFnZW1lbnQ/IEFuc3dlciBDaG9pY2VzOiAoQSkgSGVwYXRpdGlzIEIgc3VyZmFjZSBhbnRpZ2VuIHRlc3QgKEIpIERhcmstZmllbGQgbWljcm9zY29weSAoQykKSGVycGVzIHNpbXBsZXggdmlydXMgUENSIChEKSBMaXZlciBmdW5jdGlvbiB0ZXN0cyAoRSkgQ0Q0KyBULWNlbGwgY291bnQgKEYpIEhJVi0xL0hJVi0yIGRpZmZlcmVudGlhdGlvbgppbW11bm9hc3NheSAoRykgQ2VyZWJyb3NwaW5hbCBmbHVpZCBhbmFseXNpcyAoSCkgQ29tcGxldGUgYmxvb2QgY291bnQgd2l0aCBkaWZmZXJlbnRpYWwgKEkpIERhcmtmaWVsZAptaWNyb3Njb3B5IG9mIGxlc2lvbnMgKEopIE5BQVQgZm9yIEMuIHRyYWNob21hdGlzIGFuZCBOLiBnb25vcnJoZWEKIEEuIERhcmstZmllbGQgbWljcm9zY29weQpCLiBIZXJwZXMgc2ltcGxleCB2aXJ1cyBQQ1IKQy4gSGVwYXRpdGlzIEIgc3VyZmFjZSBhbnRpZ2VuIHRlc3QKRC4gQ0Q0KyBULWNlbGwgY291bnQKCkUuIENvbXBsZXRlIGJsb29kIGNvdW50IHdpdGggZGlmZmVyZW50aWFsCkYuIE5BQVQgZm9yIEMuIHRyYWNob21hdGlzIGFuZCBOLiBnb25vcnJoZWEKRy4gSElWLTEvSElWLTIgZGlmZmVyZW50aWF0aW9uIGltbXVub2Fzc2F5CkguIENlcmVicm9zcGluYWwgZmx1aWQgYW5hbHlzaXMKSS4gTGl2ZXIgZnVuY3Rpb24gdGVzdHMKSi4gRGFya2ZpZWxkIG1pY3Jvc2NvcHkgb2YgbGVzaW9ucwo="
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "DocumentReference/mxq-0115-note"
+      }
+    }
+  ]
+}

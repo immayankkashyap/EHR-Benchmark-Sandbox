@@ -1,0 +1,17 @@
+services:
+  ehr-viewer:
+    build: ./benchmark-ehr
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - ./benchmark-ehr/generated:/data
+    restart: unless-stopped
+    networks:
+      - sandbox_internal
+      - viewer_access
+    depends_on:
+      - hapi-fhir-jpaserver
+
+networks:
+  viewer_access:
+    driver: bridge

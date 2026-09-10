@@ -1,5 +1,11 @@
 # Healthcare EHR Sandbox
 
+To evaluate your model, see [the model testing and scoring guide](benchmark-scoring/README.md).
+Run `python3 scripts/benchmark.py setup`, then `python3 scripts/benchmark.py smoke`.
+
+For the 500 question-only MedXpertQA patient charts, open **http://localhost:8090**.
+See [the benchmark EHR guide](benchmark-ehr/README.md) for startup, ingestion, and answer-exclusion rules.
+
 A secure, isolated, and reproducible benchmarking environment designed for evaluating clinical AI models and LLM agents on electronic health record (EHR) workflows, FHIR data standards, and multi-step healthcare decision-making tasks.
 
 ---
