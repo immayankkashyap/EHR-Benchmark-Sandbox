@@ -10,7 +10,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -47,7 +47,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -78,7 +78,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -105,7 +105,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -153,7 +153,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -167,7 +167,7 @@
         },
         "status": "current",
         "type": {
-          "text": "Original benchmark question"
+          "text": "Reviewed patient note"
         },
         "subject": {
           "reference": "Patient/mxq-0053"
@@ -189,8 +189,8 @@
           {
             "attachment": {
               "contentType": "text/plain; charset=utf-8",
-              "title": "Question 53 — original text and unmarked choices",
-              "data": "MTE3Lzc4LT4xMDcvNjggKGJhbmRzPW5vcm1hbC9ub3JtYWwpOyBSUiAxMi0+MTUgKGJhbmQ9bm9ybWFsKQpBIDI2LXllYXItb2xkIG1hbGUgYXJyaXZlcyBhdCB0aGUgZW1lcmdlbmN5IGRlcGFydG1lbnQgZm9sbG93aW5nIGEgbG93LXNwZWVkIG1vdG9yIHZlaGljbGUgY29sbGlzaW9uCndoZXJlIGhpcyBzdGF0aW9uYXJ5IHZlaGljbGUgd2FzIHN0cnVjayBmcm9tIGJlaGluZCBieSBhIGNhciB0cmF2ZWxpbmcgYXQgMTEgbWlsZXMgcGVyIGhvdXIuIEhlIHJlcG9ydHMKaW50ZW5zZSBiYWNrIHBhaW4gYnV0IGRlbmllcyBvdGhlciBzeW1wdG9tcy4gSGlzIG1lZGljYWwgaGlzdG9yeSByZXZlYWxzIG9uZ29pbmcgcGh5c2ljYWwgdGhlcmFweSBmb3IKYmFjayBwYWluIHRoYXQgaXMgbW9zdCBzZXZlcmUgaW4gdGhlIG1vcm5pbmdzLCBpbXByb3ZlcyB3aXRoIHBoeXNpY2FsIGFjdGl2aXR5LCBhbmQgd29yc2VucyBkdXJpbmcKcGVyaW9kcyBvZiBpbmFjdGl2aXR5LiBIZSBpcyBhIHVuaXZlcnNpdHkgc3R1ZGVudCBleHBlcmllbmNpbmcgYWNhZGVtaWMgZGlmZmljdWx0aWVzLiBIaXMgdml0YWwgc2lnbnMgc2hvdzoKdGVtcGVyYXR1cmUgOTkuNMKwRiAoMzYuOcKwQyksIGJsb29kIHByZXNzdXJlIDEwNy82OCBtbUhnLCBwdWxzZSAxMDMvbWluLCByZXNwaXJhdGlvbnMgMTUvbWluLCBhbmQKb3h5Z2VuIHNhdHVyYXRpb24gOTklIG9uIHJvb20gYWlyLiBQaHlzaWNhbCBleGFtaW5hdGlvbiByZXZlYWxzIHNwaW5hbCB0ZW5kZXJuZXNzIGFuZCBsaW1pdGVkIHJhbmdlCm9mIG1vdGlvbiwgd2l0aCB0aGUgcmVtYWluZGVyIG9mIHRoZSBleGFtaW5hdGlvbiBsaW1pdGVkIGJ5IHBhaW4uIFRoZSBwYXRpZW50IGlzIHNlZWtpbmcgZG9jdW1lbnRhdGlvbgp0byBiZSBleGN1c2VkIGZyb20gaGlzIGZpbmFsIGV4YW1pbmF0aW9ucyBhbmQgd29yayBkdXRpZXMuIFdoYXQgaXMgdGhlIG1vc3QgcHJvYmFibGUgZGlhZ25vc2lzPwpBbnN3ZXIgQ2hvaWNlczogKEEpIEhlcm5pYXRlZCBudWNsZXVzIHB1bHBvc3VzIChCKSBQc3ljaG9nZW5pYyBwYWluIGRpc29yZGVyIChDKSBBY3V0ZSBkaXNjCmhlcm5pYXRpb24gKEQpIE11c2N1bG9za2VsZXRhbCBzdHJhaW4gKEUpIFNwb25keWxvbGlzdGhlc2lzIChGKSBGYWN0aXRpb3VzIGRpc29yZGVyIChHKSBDb252ZXJzaW9uCmRpc29yZGVyIChIKSBNYWxpbmdlcmluZyAoSSkgU3BpbmFsIGNvcmQgY29udHVzaW9uIChKKSBWZXJ0ZWJyYWwgZnJhY3R1cmUKIEEuIENvbnZlcnNpb24gZGlzb3JkZXIKQi4gUHN5Y2hvZ2VuaWMgcGFpbiBkaXNvcmRlcgpDLiBNYWxpbmdlcmluZwpELiBGYWN0aXRpb3VzIGRpc29yZGVyCgpFLiBBY3V0ZSBkaXNjIGhlcm5pYXRpb24KRi4gU3BpbmFsIGNvcmQgY29udHVzaW9uCkcuIFNwb25keWxvbGlzdGhlc2lzCkguIE11c2N1bG9za2VsZXRhbCBzdHJhaW4KSS4gVmVydGVicmFsIGZyYWN0dXJlCkouIEhlcm5pYXRlZCBudWNsZXVzIHB1bHBvc3VzCg=="
+              "title": "Patient clinical note",
+              "data": "Tm8gcmV2aWV3ZWQgY2xpbmljYWwgbm90ZSBpcyBhdmFpbGFibGUu"
             }
           }
         ]

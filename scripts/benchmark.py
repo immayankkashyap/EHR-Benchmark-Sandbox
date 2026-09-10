@@ -25,18 +25,7 @@ def setup():
     execute([PYTHON,'benchmark-ehr/prepare.py','medxpertqa_salted_500_curated.pdf'])
     execute([PYTHON,'benchmark-scoring/build_key.py','medxpertqa_salted_500_curated.pdf'])
     execute(COMPOSE+['up','-d','--build','ehr-viewer'])
-    deadline = time.monotonic()+180
-    while time.monotonic()<deadline:
-        try:
-            with urlopen('http://localhost:8090/api/patients', timeout=5) as response:
-                json.load(response)
-            break
-        except Exception:
-            time.sleep(2)
-    else:
-        raise SystemExit('EHR startup timed out. Inspect docker compose logs and rerun setup.')
-    execute(COMPOSE+['exec','-T','ehr-viewer','python','ingest.py','--fhir','http://hapi-fhir-jpaserver:8080/fhir','--data','/data'])
-    print('Ready. Open http://localhost:8090 or run: python3 scripts/benchmark.py smoke')
+    print('Ready. Run python3 scripts/benchmark.py smoke; see README for the optional browser viewer.')
 
 
 def main():

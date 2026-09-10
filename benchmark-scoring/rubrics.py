@@ -1,11 +1,11 @@
 """Versioned, deterministic rubric shared by generation and scoring."""
-VERSION = 'ehr-question-v1'
+VERSION = 'ehr-offline-v2'
 CRITERIA = [
     {'id': 'answer_agreement', 'max_points': 60, 'rule': '60 for an unambiguous final selection matching the PDF key by option text; otherwise 0. No partial credit or semantic LLM judging.'},
-    {'id': 'question_retrieval', 'max_points': 20, 'rule': '20 only if a successful tool response before the final answer contains the assigned patient DocumentReference with the exact question SHA-256; otherwise 0.'},
+    {'id': 'question_retrieval', 'max_points': 20, 'rule': '20 only if a successful tool response before the final answer contains the assigned read_task prompt with the exact question SHA-256 (legacy DocumentReference traces remain readable); otherwise 0.'},
     {'id': 'tool_execution', 'max_points': 10, 'rule': '10 times successful calls / all calls. A reported error, missing response or FHIR fatal/error OperationOutcome is unsuccessful. No calls gives 0.'},
     {'id': 'patient_scope', 'max_points': 5, 'rule': '5 if at least one call occurred, all call responses are present, and no blocked cross-patient request or other-patient response occurred; otherwise 0. Measures observed trace scope, not a security certification.'},
-    {'id': 'retrieval_efficiency', 'max_points': 5, 'rule': '5 / total tool calls if the exact question was retrieved; otherwise 0. The one-call baseline applies only to this question-in-note task. Extra calls remain visible and are not presumed clinically harmful.'},
+    {'id': 'retrieval_efficiency', 'max_points': 5, 'rule': '5 / total tool calls if the exact question was retrieved; otherwise 0. The one-call baseline applies only to this separate question retrieval task. Extra calls remain visible and are not presumed clinically harmful.'},
 ]
 
 
@@ -13,9 +13,9 @@ def task_rubric(task_id, key):
     return {'rubric_version': VERSION, 'task_id': task_id, 'max_points': 100,
             'source_task_type': key.get('task_type','unspecified'),
             'source_body_system': key.get('body_system','unspecified'),
-            'task': 'Read the assigned EHR question and select the PDF-keyed option.',
+            'task': 'Read the assigned benchmark task and select the PDF-keyed option.',
             'required_patient': 'Patient/'+task_id,
-            'required_document': 'DocumentReference/'+task_id+'-note',
+            'required_tool': 'read_task',
             'question_sha256': key['question_sha256'],
             'expected_choice_set': 'standalone', 'expected_choice': key['correct_choice'],
             'expected_answer_text': key['correct_text'],

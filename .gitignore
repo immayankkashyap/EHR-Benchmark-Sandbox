@@ -37,3 +37,6 @@ Thumbs.db
 
 # Evaluator ground truth and reports: never mount into model containers
 /evaluation-private/
+
+# Source question banks may contain answer sections
+/*.pdf

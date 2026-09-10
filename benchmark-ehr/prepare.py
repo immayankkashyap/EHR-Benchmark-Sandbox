@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from pypdf import PdfReader
 
-DATASET = 'medxpertqa-salted-500-curated'
+DATASET = 'patient-only-v2'
 SYSTEM = 'http://healthcare-ehr-sandbox.local/tags'
 
 def extract(text, expected=500):
@@ -33,7 +33,7 @@ def extract(text, expected=500):
         raise ValueError('Missing or duplicate question numbers')
     return questions
 
-def bundle(q):
+def bundle(q, clinical_note="No reviewed clinical note is available."):
     n = q['number']
     pid = f'mxq-{n:04d}'
     visit = (date(2025, 1, 1) + timedelta(days=(n-1)%365)).isoformat()+'T09:00:00Z'
@@ -53,12 +53,12 @@ def bundle(q):
                          participant=[{'individual': {'reference': 'Practitioner/'+doctor}}],
                          serviceProvider={'reference': 'Organization/'+pid+'-hospital'})
     note = resource('DocumentReference', pid+'-note', status='current',
-                    type={'text': 'Original benchmark question'}, subject={'reference': 'Patient/'+pid},
+                    type={'text': 'Reviewed patient note'}, subject={'reference': 'Patient/'+pid},
                     date=visit, author=[{'reference': 'Practitioner/'+doctor}],
                     context={'encounter': [{'reference': 'Encounter/'+pid+'-visit'}]},
                     content=[{'attachment': {'contentType': 'text/plain; charset=utf-8',
-                              'title': f'Question {n} — original text and unmarked choices',
-                              'data': base64.b64encode(q['question'].encode()).decode()}}])
+                              'title': 'Patient clinical note',
+                              'data': base64.b64encode(clinical_note.encode()).decode()}}])
     resources = [patient, practitioner, org, encounter, note]
     return {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
         {'resource': r, 'request': {'method': 'PUT', 'url': r['resourceType']+'/'+r['id']}}
@@ -67,16 +67,19 @@ def bundle(q):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('pdf', type=Path)
+    parser.add_argument('--tasks', type=Path, default=Path('benchmark-tasks'))
     parser.add_argument('--output', type=Path, default=Path('benchmark-ehr/generated'))
     args = parser.parse_args()
     questions = extract('\n'.join(p.extract_text() for p in PdfReader(args.pdf).pages))
     args.output.mkdir(parents=True, exist_ok=True)
-    manifest = {'dataset': DATASET, 'source_sha256': hashlib.sha256(args.pdf.read_bytes()).hexdigest(),
+    args.tasks.mkdir(parents=True, exist_ok=True)
+    manifest = {'dataset': DATASET,
                 'count': len(questions), 'cases': []}
     for q in questions:
         pid = f"mxq-{q['number']:04d}"
+        (args.tasks/(pid+'.json')).write_text(json.dumps({'patient_id': pid, 'question': q['question']})+'\n')
         (args.output/(pid+'.json')).write_text(json.dumps(bundle(q), ensure_ascii=False, indent=2)+'\n')
-        manifest['cases'].append({'id': pid, 'number': q['number'], 'question_sha256': q['sha256']})
+        manifest['cases'].append({'id': pid, 'number': q['number']})
     (args.output/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
     print(f'Prepared {len(questions)} question-only FHIR bundles')
 

@@ -10,7 +10,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -47,7 +47,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -78,7 +78,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -105,7 +105,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -153,7 +153,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -167,7 +167,7 @@
         },
         "status": "current",
         "type": {
-          "text": "Original benchmark question"
+          "text": "Reviewed patient note"
         },
         "subject": {
           "reference": "Patient/mxq-0124"
@@ -189,8 +189,8 @@
           {
             "attachment": {
               "contentType": "text/plain; charset=utf-8",
-              "title": "Question 124 — original text and unmarked choices",
-              "data": "QSA2NC15ZWFyLW9sZCBtYW4gd2l0aCBhIGhpc3Rvcnkgb2YgaGVwYXRpdGlzIEMgdmlydXMgKEhDVikgaW5mZWN0aW9uIHRoYXQgd2FzIHVucmVzcG9uc2l2ZSB0byBwcmlvcgp0cmVhdG1lbnQgd2l0aCBwZWdpbnRlcmZlcm9uLCByaWJhdmlyaW4sIGFuZCB0ZWxhcHJldmlyIHByZXNlbnRzIGZvciBmb2xsb3ctdXAuIEhlIGhhcyBhIGhpc3Rvcnkgb2YgYWxjb2hvbAp1c2UgZGlzb3JkZXIgYnV0IGhhcyByZW1haW5lZCBzb2JlciBmb3IgdGhlIHBhc3QgMyB5ZWFycy4gSGUgZGVuaWVzIHRvYmFjY28gb3IgcmVjcmVhdGlvbmFsIGRydWcgdXNlLgpPbiBwaHlzaWNhbCBleGFtaW5hdGlvbiwgc2NhdHRlcmVkIHNwaWRlciB0ZWxhbmdpZWN0YXNpYXMgYXJlIG5vdGVkIG9uIHRoZSBhbnRlcmlvciBjaGVzdCB3YWxsLiBUaGUKYWJkb21lbiBpcyBub250ZW5kZXIsIHRoZSBsaXZlciBlZGdlIGlzIG5vdCBwYWxwYWJsZSwgYW5kIHRoZSB0aXAgb2YgdGhlIHNwbGVlbiBpcyBwYWxwYWJsZSAxIGNtIGJlbG93CnRoZSBjb3N0YWwgbWFyZ2luIGluIHRoZSByaWdodCBsYXRlcmFsIGRlY3ViaXR1cyBwb3NpdGlvbi4gTGFib3JhdG9yeSByZXN1bHRzIHJldmVhbCBhbiBpbnRlcm5hdGlvbmFsCm5vcm1hbGl6ZWQgcmF0aW8gb2YgMS4zLCBIQ1YgZ2Vub3R5cGUgMWEsIEhDViBSTkEgbGV2ZWwgb2YgMSw1MDAsMDAwIElVL21MLCBhbmQgbmVnYXRpdmUgc2Vyb2xvZ2ljCmZpbmRpbmdzIGZvciBoZXBhdGl0aXMgQSwgaGVwYXRpdGlzIEIsIGFuZCBISVYuIEFkZGl0aW9uYWwgZmluZGluZ3MgYXJlIGFzIGZvbGxvd3M6IHwgfCBQYXRpZW50IHZhbHVlIHwKUmVmZXJlbmNlIHJhbmdlIHwgfCAtLS0gfCAtLS0gfCAtLS0gfCB8IEFsYW5pbmUgYW1pbm90cmFuc2ZlcmFzZSAoVS9saXRlcikgfCA0OSB8IDDigJMzNSB8IHwgQXNwYXJ0YXRlCmFtaW5vdHJhbnNmZXJhc2UgKFUvbGl0ZXIpIHwgODUgfCAw4oCTMzUgfCB8IEFsa2FsaW5lIHBob3NwaGF0YXNlIChVL2xpdGVyKSB8IDcwIHwgMzDigJMxMjAgfCB8IFRvdGFsIGJpbGlydWJpbgoobWcvZEwpIHwgMS4wIHwgMC4z4oCTMS4wIHwgfCBBbGJ1bWluIChnL2RMKSB8IDMuMCB8IDMuNeKAkzUuNSB8IHwgTGV1a29jeXRlIGNvdW50IChwZXIgbW0zKSB8IDQwMDAgfCA0NTAwIC0KMTEsMDAwIHwgfCBIZW1vZ2xvYmluIChnL2RMKSB8IDEwLjIgfCAxMy41IC0gMTcuNSB8IHwgUGxhdGVsZXQgY291bnQgKHBlciBtbTMpIHwgMTMwLDAwMCB8IDE1MCwwMDAgLQozNTAsMDAwIHwgV2hpY2ggb2YgdGhlIGZvbGxvd2luZyBzY3JlZW5pbmcgdGVzdHMgaXMgbW9zdCBhcHByb3ByaWF0ZSBmb3IgdGhpcyBwYXRpZW50PyBBbnN3ZXIgQ2hvaWNlczoKKEEpIENUIHNjYW4gb2YgdGhlIGFiZG9tZW4gYW5kIHNlcnVtIGFscGhhLWZldG9wcm90ZWluIChCKSBMaXZlciBiaW9wc3kgYW5kIHNlcnVtIGFscGhhLWZldG9wcm90ZWluCihDKSBNUkkgb2YgdGhlIGxpdmVyIGFuZCBzZXJ1bSBhbHBoYS1mZXRvcHJvdGVpbiAoRCkgQWJkb21pbmFsIHVsdHJhc291bmQgYW5kIGxpdmVyIGZ1bmN0aW9uIHRlc3RzIChFKQpFc29waGFnb2dhc3Ryb2R1b2Rlbm9zY29weSBhbmQgbWVhc3VyZW1lbnQgb2Ygc2VydW0gYWxwaGEtZmV0b3Byb3RlaW4gKEYpIENUIHNjYW4gb2YgdGhlCmFiZG9tZW4gYW5kIGVzb3BoYWdvZ2FzdHJvZHVvZGVub3Njb3B5IChHKSBNZWFzdXJlbWVudCBvZiBzZXJ1bSBhbHBoYS1mZXRvcHJvdGVpbiAoSCkKQWJkb21pbmFsIHVsdHJhc291bmQgYW5kIGxpdmVyIGVsYXN0b2dyYXBoeSAoSSkgTVJJIG9mIHRoZSBsaXZlciBhbmQgbGl2ZXIgYmlvcHN5IChKKQpFc29waGFnb2dhc3Ryb2R1b2Rlbm9zY29weSBhbmQgYWJkb21pbmFsIHVsdHJhc291bmQKIEEuIEFiZG9taW5hbCB1bHRyYXNvdW5kIGFuZCBsaXZlciBmdW5jdGlvbiB0ZXN0cwpCLiBFc29waGFnb2dhc3Ryb2R1b2Rlbm9zY29weSBhbmQgYWJkb21pbmFsIHVsdHJhc291bmQKQy4gQWJkb21pbmFsIHVsdHJhc291bmQgYW5kIGxpdmVyIGVsYXN0b2dyYXBoeQpELiBNUkkgb2YgdGhlIGxpdmVyIGFuZCBzZXJ1bSBhbHBoYS1mZXRvcHJvdGVpbgpFLiBDVCBzY2FuIG9mIHRoZSBhYmRvbWVuIGFuZCBzZXJ1bSBhbHBoYS1mZXRvcHJvdGVpbgpGLiBMaXZlciBiaW9wc3kgYW5kIHNlcnVtIGFscGhhLWZldG9wcm90ZWluCkcuIENUIHNjYW4gb2YgdGhlIGFiZG9tZW4gYW5kIGVzb3BoYWdvZ2FzdHJvZHVvZGVub3Njb3B5CkguIE1SSSBvZiB0aGUgbGl2ZXIgYW5kIGxpdmVyIGJpb3BzeQpJLiBFc29waGFnb2dhc3Ryb2R1b2Rlbm9zY29weSBhbmQgbWVhc3VyZW1lbnQgb2Ygc2VydW0gYWxwaGEtZmV0b3Byb3RlaW4KSi4gTWVhc3VyZW1lbnQgb2Ygc2VydW0gYWxwaGEtZmV0b3Byb3RlaW4K"
+              "title": "Patient clinical note",
+              "data": "Tm8gcmV2aWV3ZWQgY2xpbmljYWwgbm90ZSBpcyBhdmFpbGFibGUu"
             }
           }
         ]

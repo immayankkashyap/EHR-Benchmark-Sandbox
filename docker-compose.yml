@@ -3,6 +3,8 @@ services:
   # Core FHIR & Database Infrastructure (Internal Only)
   # ---------------------------------------------------------------------------
   hapi-fhir-postgres:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     image: postgres:16-alpine
     container_name: hapi-fhir-postgres
     environment:
@@ -21,6 +23,8 @@ services:
       - sandbox_internal
 
   hapi-fhir-jpaserver:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     image: hapiproject/hapi:latest
     container_name: hapi-fhir-jpaserver
     environment:
@@ -30,7 +34,7 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
       HIBERNATE_DIALECT: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       hapi-fhir-postgres:
         condition: service_healthy
@@ -41,32 +45,38 @@ services:
   # Phase 2 Auxiliary Reference Microservices (Internal Only)
   # ---------------------------------------------------------------------------
   drug-interaction-checker:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     build:
       context: ./auxiliary-tools/drug-interaction-checker
       dockerfile: Dockerfile
     container_name: drug-interaction-checker
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     networks:
       - sandbox_internal
 
   lab-reference-range:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     build:
       context: ./auxiliary-tools/lab-reference-range
       dockerfile: Dockerfile
     container_name: lab-reference-range
     ports:
-      - "8002:8000"
+      - "127.0.0.1:8002:8000"
     networks:
       - sandbox_internal
 
   dosage-guideline:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     build:
       context: ./auxiliary-tools/dosage-guideline
       dockerfile: Dockerfile
     container_name: dosage-guideline
     ports:
-      - "8003:8000"
+      - "127.0.0.1:8003:8000"
     networks:
       - sandbox_internal
 
@@ -74,40 +84,37 @@ services:
   # Phase 3 Orchestrator Service (Internal + Proxy External)
   # ---------------------------------------------------------------------------
   orchestrator:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     build:
       context: ./orchestrator
       dockerfile: Dockerfile
     container_name: orchestrator
     environment:
-      HTTP_PROXY: "http://egress-proxy:3128"
-      HTTPS_PROXY: "http://egress-proxy:3128"
-      http_proxy: "http://egress-proxy:3128"
-      https_proxy: "http://egress-proxy:3128"
       PYTHONPATH: "/app"
     ports:
-      - "8000:8080"
+      - "127.0.0.1:8000:8080"
     volumes:
       - ./logs:/app/logs
-      - ./scripted-model:/app/scripted-model
+      - ./scripted-model:/app/scripted-model:ro
     depends_on:
-      - egress-proxy
       - hapi-fhir-jpaserver
     networks:
       - sandbox_internal
-      - proxy_external
 
   # ---------------------------------------------------------------------------
   # Phase 5 Egress Proxy Service (External Only)
   # ---------------------------------------------------------------------------
   egress-proxy:
+    profiles: [legacy]
+    security_opt: [no-new-privileges:true]
     build:
       context: ./networks/egress-proxy
       dockerfile: Dockerfile
     container_name: egress-proxy
     ports:
-      - "3128:3128"
-    networks:
-      - proxy_external
+      - "127.0.0.1:3128:3128"
+    network_mode: none
 
 # ---------------------------------------------------------------------------
 # Network Topologies

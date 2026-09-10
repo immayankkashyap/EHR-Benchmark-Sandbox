@@ -89,6 +89,11 @@ def tool_metrics(events, task_id, question_hash):
             if isinstance(target, str) and target not in (task_id, 'Patient/'+task_id):
                 scope_violations += 1
         raw = call.get('raw_response')
+        if isinstance(raw, dict) and not response_failed(raw) and call.get('tool_name') == 'read_task' and raw.get('patient_id') == task_id and isinstance(raw.get('question_text'), str):
+            if hashlib.sha256(raw['question_text'].encode()).hexdigest() == question_hash:
+                verified_notes += 1
+                if first_retrieval is None:
+                    first_retrieval = index
         if raw is None:
             unverified += 1
         failed += response_failed(raw)

@@ -1,3 +1,5 @@
+> Strict offline v2: question retrieval now uses `read_task`, separate from patient-only EHR records. Legacy DocumentReference traces remain scoreable. See the root SECURITY.md for current execution instructions.
+
 # Test a model against the 500 EHR cases
 
 The runner lets a model retrieve each question from the live EHR, records its

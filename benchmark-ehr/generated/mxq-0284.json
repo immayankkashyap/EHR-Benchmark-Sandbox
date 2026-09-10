@@ -10,7 +10,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -47,7 +47,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -78,7 +78,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -105,7 +105,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -153,7 +153,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -167,7 +167,7 @@
         },
         "status": "current",
         "type": {
-          "text": "Original benchmark question"
+          "text": "Reviewed patient note"
         },
         "subject": {
           "reference": "Patient/mxq-0284"
@@ -189,8 +189,8 @@
           {
             "attachment": {
               "contentType": "text/plain; charset=utf-8",
-              "title": "Question 284 — original text and unmarked choices",
-              "data": "QSA0My15ZWFyLW9sZCBmZW1hbGUgcHJlc2VudHMgdG8gdGhlIGVtZXJnZW5jeSBkZXBhcnRtZW50IHdpdGggYWN1dGUgb25zZXQgcmlnaHQtc2lkZWQgd2Vha25lc3MKdGhhdCBkZXZlbG9wZWQgb3ZlciB0aGUgcGFzdCB0d28gaG91cnMuIFNoZSByZXBvcnRzIGRpbWluaXNoZWQgc3RyZW5ndGggaW4gaGVyIHJpZ2h0IGhhbmQgY29tcGFyZWQgdG8KaGVyIGxlZnQsIGFsb25nIHdpdGggcHJvZ3Jlc3NpdmUgd2Vha25lc3MgaW4gaGVyIHJpZ2h0IGxlZy4gSGVyIG1lZGljYWwgaGlzdG9yeSBpbmNsdWRlcyBkaWFiZXRlcywKaHlwZXJjaG9sZXN0ZXJvbGVtaWEsIGFuZCBoeXBlcnRlbnNpb24sIGZvciB3aGljaCBzaGUgYWRtaXRzIHBvb3IgbWVkaWNhdGlvbiBjb21wbGlhbmNlLiBQaHlzaWNhbApleGFtaW5hdGlvbiByZXZlYWxzIGRlY3JlYXNlZCBtdXNjbGUgc3RyZW5ndGggb24gdGhlIHJpZ2h0IHNpZGUgY29tcGFyZWQgdG8gdGhlIGxlZnQsIHdpdGggcHJlc2VydmVkCnJlZmxleGVzIGJpbGF0ZXJhbGx5LiBUaGUgcGF0aWVudCBkZW1vbnN0cmF0ZXMgcmlnaHQtc2lkZWQgbG93ZXIgZmFjaWFsIGRyb29wIGFuZCBpbmFiaWxpdHkgdG8gc21pbGUsCnRob3VnaCBmb3JlaGVhZCB3cmlua2xpbmcgcmVtYWlucyBpbnRhY3QuIEdpdmVuIHRoZXNlIGNsaW5pY2FsIGZpbmRpbmdzIGFuZCBoaXN0b3J5LCB3aGljaCBhZGRpdGlvbmFsCnN5bXB0b20gd291bGQgeW91IGV4cGVjdCB0byBmaW5kIGluIHRoaXMgcGF0aWVudD8gQW5zd2VyIENob2ljZXM6IChBKSBEeXNhcnRocmlhIChCKSBDb25qdWdhdGUgZ2F6ZQpkZXZpYXRpb24gdG8gdGhlIGxlZnQgKEMpIExhdGVyYWwgc3RyYWJpc211cyAoRCkgTnlzdGFnbXVzIHdpdGggZmFzdCBjb21wb25lbnQgdG8gdGhlIHJpZ2h0IChFKSBNZWRpYWwKc3RyYWJpc211cyAoRikgSG9tb255bW91cyBoZW1pYW5vcGlhIChHKSBQYXJhbHlzaXMgb2YgdXB3YXJkIGdhemUgKEgpIEZsYWNjaWQgcGFyYWx5c2lzIG9mIHRoZQp0b25ndWUgKEkpIEludGVybnVjbGVhciBvcGh0aGFsbW9wbGVnaWEgKEopIFZlcnRpY2FsIGRpcGxvcGlhCiBBLiBWZXJ0aWNhbCBkaXBsb3BpYQpCLiBOeXN0YWdtdXMgd2l0aCBmYXN0IGNvbXBvbmVudCB0byB0aGUgcmlnaHQKQy4gQ29uanVnYXRlIGdhemUgZGV2aWF0aW9uIHRvIHRoZSBsZWZ0CkQuIEludGVybnVjbGVhciBvcGh0aGFsbW9wbGVnaWEKRS4gRmxhY2NpZCBwYXJhbHlzaXMgb2YgdGhlIHRvbmd1ZQpGLiBEeXNhcnRocmlhCkcuIE1lZGlhbCBzdHJhYmlzbXVzCkguIEhvbW9ueW1vdXMgaGVtaWFub3BpYQpJLiBQYXJhbHlzaXMgb2YgdXB3YXJkIGdhemUKSi4gTGF0ZXJhbCBzdHJhYmlzbXVzCg=="
+              "title": "Patient clinical note",
+              "data": "Tm8gcmV2aWV3ZWQgY2xpbmljYWwgbm90ZSBpcyBhdmFpbGFibGUu"
             }
           }
         ]

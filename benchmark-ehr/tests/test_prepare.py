@@ -18,7 +18,7 @@ class ExtractionTests(unittest.TestCase):
         self.assertEqual(q['question'], expected)
         b = m.bundle(q)
         note = b['entry'][-1]['resource']
-        self.assertEqual(base64.b64decode(note['content'][0]['attachment']['data']).decode(), expected)
+        self.assertEqual(base64.b64decode(note['content'][0]['attachment']['data']).decode(), 'No reviewed clinical note is available.')
         self.assertNotIn('SECRET', str(b))
         self.assertNotIn('secret', str(b))
         self.assertEqual({e['resource']['resourceType'] for e in b['entry']}, {'Patient','Practitioner','Organization','Encounter','DocumentReference'})
@@ -29,6 +29,7 @@ class ExtractionTests(unittest.TestCase):
         for text in [self.fixture().replace('Answer: A.', 'Key: A.'), self.fixture()+self.fixture(), self.fixture().replace('J. Last', 'K. Last')]:
             with self.assertRaises(ValueError): m.extract(text, 1)
 
+    @unittest.skipUnless((ROOT.parent/'medxpertqa_salted_500_curated.pdf').exists(), 'Source PDF is not present')
     def test_full_pdf(self):
         from pypdf import PdfReader
         text = '\n'.join(p.extract_text() for p in PdfReader(ROOT.parent/'medxpertqa_salted_500_curated.pdf').pages)
@@ -38,6 +39,6 @@ class ExtractionTests(unittest.TestCase):
             self.assertNotRegex(q['question'], r'(?m)^Answer:')
             self.assertNotIn('CANARY-', q['question'])
             note=m.bundle(q)['entry'][-1]['resource']
-            self.assertEqual(base64.b64decode(note['content'][0]['attachment']['data']).decode(), q['question'])
+            self.assertNotEqual(base64.b64decode(note['content'][0]['attachment']['data']).decode(), q['question'])
 
 if __name__ == '__main__': unittest.main()

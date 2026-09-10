@@ -10,7 +10,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -47,7 +47,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -78,7 +78,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -105,7 +105,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -153,7 +153,7 @@
           "tag": [
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/dataset",
-              "code": "medxpertqa-salted-500-curated"
+              "code": "patient-only-v2"
             },
             {
               "system": "http://healthcare-ehr-sandbox.local/tags/task_id",
@@ -167,7 +167,7 @@
         },
         "status": "current",
         "type": {
-          "text": "Original benchmark question"
+          "text": "Reviewed patient note"
         },
         "subject": {
           "reference": "Patient/mxq-0374"
@@ -189,8 +189,8 @@
           {
             "attachment": {
               "contentType": "text/plain; charset=utf-8",
-              "title": "Question 374 — original text and unmarked choices",
-              "data": "KGJhbmRzPW5vcm1hbC9ub3JtYWwpOyBSUiAxNC0+MTIgKGJhbmQ9bm9ybWFsKQpBIDIyLXllYXItb2xkIG1hbiB2aXNpdHMgaGlzIHByaW1hcnkgY2FyZSBwcm92aWRlciByZXBvcnRpbmcgZHlzdXJpYSBhbmQgdXJldGhyYWwgZGlzY2hhcmdlIGZvciB0aGUgcGFzdAp3ZWVrLiBIZSByZXBvcnRzIGhhdmluZyBoYWQgdW5wcm90ZWN0ZWQgc2V4dWFsIGNvbnRhY3Qgd2l0aCBib3RoIG1hbGUgYW5kIGZlbWFsZSBwYXJ0bmVycyB3aXRoaW4gdGhlCmxhc3QgbW9udGguIEhlIGhhcyBubyBmZXZlciBvciBwcmV2aW91cyBlcGlzb2RlcyBvZiBkaXNjaGFyZ2UuIEhpcyBtZWRpY2FsIGhpc3RvcnkgaXMgdW5yZW1hcmthYmxlCmV4Y2VwdCBmb3Igb2NjYXNpb25hbCBhbGNvaG9sIGNvbnN1bXB0aW9uIGFuZCBwYXN0IG1hcmlqdWFuYSB1c2UuIEhlIHRha2VzIG5vIHJlZ3VsYXIgbWVkaWNhdGlvbnMuClBoeXNpY2FsIGV4YW1pbmF0aW9uIHJldmVhbHMgbm9ybWFsIHZpdGFsIHNpZ25zICh0ZW1wZXJhdHVyZSA5Ny4xwrBGLCBibG9vZCBwcmVzc3VyZSAxMDgvNzMgbW1IZywKcHVsc2UgNzMvbWluLCByZXNwaXJhdG9yeSByYXRlIDEyL21pbikuIEdlbml0YWwgZXhhbWluYXRpb24gc2hvd3MgYSBjaXJjdW1jaXNlZCBwZW5pcyB3aXRoIG5vcm1hbAptZWF0YWwgcG9zaXRpb24gYW5kIG5vbi10ZW5kZXIgZGVzY2VuZGVkIHRlc3RlcyBiaWxhdGVyYWxseS4gTGFib3JhdG9yeSB0ZXN0aW5nIHJldmVhbHMgbGFyZ2UgbGV1a29jeXRlCmVzdGVyYXNlIG9uIHVyaW5hbHlzaXMsIHdoaWxlIHVyZXRocmFsIHN3YWIgZ3JhbSBzdGFpbiBpcyBuZWdhdGl2ZS4gV2hhdCBvcmdhbmlzbSBpcyBtb3N0IGxpa2VseQpyZXNwb25zaWJsZSBmb3IgdGhpcyBjbGluaWNhbCBwcmVzZW50YXRpb24/IEFuc3dlciBDaG9pY2VzOiAoQSkgQ2FuZGlkYSBhbGJpY2FucyAoQikgR2FyZG5lcmVsbGEKdmFnaW5hbGlzIChDKSBVcmVhcGxhc21hIHVyZWFseXRpY3VtIChEKSBUcmVwb25lbWEgcGFsbGlkdW0gKEUpIEtsZWJzaWVsbGEgZ3JhbnVsb21hdGlzIChGKQpUcmljaG9tb25hcyB2YWdpbmFsaXMgKEcpIEhhZW1vcGhpbHVzIGR1Y3JleWkgKEgpIE5laXNzZXJpYSBnb25vcnJoZWEgKEkpIE15Y29wbGFzbWEgZ2VuaXRhbGl1bSAoSikKQ2hsYW15ZGlhIHRyYWNob21hdGlzCiBBLiBDaGxhbXlkaWEgdHJhY2hvbWF0aXMKQi4gVXJlYXBsYXNtYSB1cmVhbHl0aWN1bQpDLiBIYWVtb3BoaWx1cyBkdWNyZXlpCkQuIFRyZXBvbmVtYSBwYWxsaWR1bQpFLiBHYXJkbmVyZWxsYSB2YWdpbmFsaXMKRi4gTmVpc3NlcmlhIGdvbm9ycmhlYQpHLiBUcmljaG9tb25hcyB2YWdpbmFsaXMKSC4gTXljb3BsYXNtYSBnZW5pdGFsaXVtCkkuIENhbmRpZGEgYWxiaWNhbnMKSi4gS2xlYnNpZWxsYSBncmFudWxvbWF0aXMK"
+              "title": "Patient clinical note",
+              "data": "Tm8gcmV2aWV3ZWQgY2xpbmljYWwgbm90ZSBpcyBhdmFpbGFibGUu"
             }
           }
         ]

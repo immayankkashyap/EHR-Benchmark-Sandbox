@@ -1,15 +1,32 @@
-"""Read-only chart viewer. Serves only this UI and dataset-tagged FHIR records."""
+"""Serve an immutable patient-only snapshot; never proxy the mutable FHIR database."""
 import argparse
-from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import re
-from urllib.parse import urlparse
-import requests
-from prepare import DATASET, SYSTEM
+from prepare import bundle
 
 ROOT = Path(__file__).resolve().parent
+
+
+def load_charts(directory):
+    charts = {}
+    for path in sorted(directory.glob('mxq-*.json')):
+        if path.is_symlink() or not re.fullmatch(r'mxq-\d{4}', path.stem):
+            raise ValueError('Invalid chart file')
+        number = int(path.stem[4:])
+        if not 1 <= number <= 500:
+            raise ValueError('Invalid patient number')
+        data = json.loads(path.read_text())
+        # Fail closed on legacy question notes, extra fields, encoded attachments,
+        # extensions, URLs, narratives, answer keys and modified metadata alike.
+        if data != bundle({'number': number}):
+            raise ValueError('Chart is not an approved patient-only snapshot: '+path.name)
+        charts[path.stem] = {e['resource']['resourceType']: e['resource'] for e in data['entry']}
+    if not charts:
+        raise ValueError('No patient-only charts loaded')
+    return charts
+
 
 class Handler(BaseHTTPRequestHandler):
     def reply(self, status, data, kind='application/json'):
@@ -18,59 +35,29 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type', kind)
         self.send_header('Content-Length', str(len(raw)))
         self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
         self.end_headers()
         self.wfile.write(raw)
 
-    def fhir(self, path, params=None):
-        with requests.Session() as session:
-            session.trust_env = False
-            result = session.get(self.server.fhir+'/'+path, params=params, timeout=30)
-            result.raise_for_status()
-            return result.json()
-
     def do_GET(self):
-        path = urlparse(self.path).path
-        try:
-            if path == '/':
-                return self.reply(200, (ROOT/'index.html').read_bytes(), 'text/html; charset=utf-8')
-            if path == '/api/patients':
-                patients = []
-                # Explicit paging using the server's continuation URL, constrained
-                # to the configured FHIR origin.
-                result = self.fhir('Patient', {'_tag': SYSTEM+'/dataset|'+DATASET, '_count': 1000})
-                while True:
-                    patients.extend(e['resource'] for e in result.get('entry', []) if e.get('resource', {}).get('resourceType') == 'Patient')
-                    nxt = next((l['url'] for l in result.get('link', []) if l['relation'] == 'next'), None)
-                    if not nxt:
-                        break
-                    parsed = urlparse(nxt)
-                    base = urlparse(self.server.fhir)
-                    if parsed.netloc != base.netloc or not parsed.path.startswith(base.path+'/'):
-                        raise ValueError('Unexpected pagination target')
-                    result = self.fhir(parsed.path[len(base.path)+1:]+'?'+parsed.query)
-                return self.reply(200, sorted(patients, key=lambda p:p['id']))
-            match = re.fullmatch(r'/api/chart/(mxq-\d{4})', path)
-            if match:
-                pid = match[1]
-                paths = ['Patient/'+pid, 'Encounter/'+pid+'-visit', 'Practitioner/'+pid+'-doctor',
-                         'Organization/'+pid+'-hospital', 'DocumentReference/'+pid+'-note']
-                with ThreadPoolExecutor(max_workers=5) as pool:
-                    resources = list(pool.map(self.fhir, paths))
-                for resource in resources:
-                    if not any(t.get('system') == SYSTEM+'/dataset' and t.get('code') == DATASET for t in resource.get('meta', {}).get('tag', [])):
-                        return self.reply(404, {'error':'Chart not in this dataset'})
-                return self.reply(200, {r['resourceType']:r for r in resources})
-            self.reply(404, {'error':'Not found'})
-        except Exception:
-            self.reply(502, {'error':'Unable to read chart from FHIR. Check that the EHR containers are running and cases have been ingested.'})
+        if self.path == '/':
+            return self.reply(200, (ROOT/'index.html').read_bytes(), 'text/html; charset=utf-8')
+        if self.path == '/api/patients':
+            return self.reply(200, [v['Patient'] for v in self.server.charts.values()])
+        match = re.fullmatch(r'/api/chart/(mxq-\d{4})', self.path)
+        if match and match[1] in self.server.charts:
+            return self.reply(200, self.server.charts[match[1]])
+        self.reply(404, {'error': 'Not found'})
+
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('--fhir', default='http://localhost:8080/fhir')
+    p.add_argument('--data', type=Path, default=Path('/data'))
     p.add_argument('--port', type=int, default=8090)
     p.add_argument('--host', default='127.0.0.1')
     args = p.parse_args()
+    charts = load_charts(args.data)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
-    server.fhir = args.fhir.rstrip('/')
-    print(f'EHR viewer: http://{args.host}:{args.port}', flush=True)
+    server.charts = charts
     server.serve_forever()

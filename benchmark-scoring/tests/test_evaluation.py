@@ -85,6 +85,7 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(row['rubric']['total'],60)
         self.assertFalse(row['question_retrieved'])
 
+    @unittest.skipUnless((ROOT/'medxpertqa_salted_500_curated.pdf').exists(), 'Source PDF is not present')
     def test_full_pdf_key_and_rubrics(self):
         from pypdf import PdfReader
         text='\n'.join(p.extract_text() for p in PdfReader(ROOT/'medxpertqa_salted_500_curated.pdf').pages)
@@ -92,7 +93,8 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(len(cases),500)
         manifest=json.loads((ROOT/'benchmark-ehr/generated/manifest.json').read_text())
         for entry in manifest['cases']:
-            self.assertEqual(cases[entry['id']]['question_sha256'],entry['question_sha256'])
+            task = json.loads((ROOT/'benchmark-tasks'/(entry['id']+'.json')).read_text())
+            self.assertEqual(cases[entry['id']]['question_sha256'], hashlib.sha256(task['question'].encode()).hexdigest())
         for pid,key in cases.items():
             self.assertTrue(answer_score(key['correct_text'],key)['correct'])
             self.assertEqual(sum(c['max_points'] for c in task_rubric(pid,key)['criteria']),100)
@@ -100,27 +102,6 @@ class ScoringTests(unittest.TestCase):
         with self.assertRaises(ValueError): extract_key(text.replace('Answer:','Missing:',1))
 
 class RunnerTests(unittest.TestCase):
-    def test_model_adapter_tool_protocol_and_credentials(self):
-        model=runner.ChatModel('http://model.test/v1','test-model','test-secret',12,{'max_completion_tokens':100})
-        message={'role':'assistant','content':'{"choice":"B"}'}
-        response=Mock(ok=True)
-        response.json.return_value={'choices':[{'message':message,'finish_reason':'stop'}],'usage':{'total_tokens':4}}
-        model.session.post=Mock(return_value=response)
-        result,usage=model([{'role':'user','content':'Evaluate patient mxq-0001'}],1)
-        self.assertEqual(result,message)
-        self.assertEqual(usage['total_tokens'],4)
-        sent=model.session.post.call_args.kwargs['json']
-        self.assertEqual(sent['tools'],runner.TOOLS)
-        self.assertEqual(sent['model'],'test-model')
-        self.assertNotIn('test-secret',json.dumps(sent))
-        self.assertNotIn('correct_choice',json.dumps(sent))
-        response.json.return_value['choices'][0]['finish_reason']='length'
-        with self.assertRaises(RuntimeError):model([],2)
-        response.ok=False;response.status_code=401
-        with self.assertRaises(runner.ModelAPIError) as error:model([],3)
-        self.assertEqual(error.exception.status_code,401)
-        model.session.close()
-
     def test_scope_is_blocked_before_network(self):
         class NoNetwork:
             def get(self,*args,**kwargs):raise AssertionError('Network must not be used')

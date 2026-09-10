@@ -8,6 +8,7 @@ import requests
 
 
 def main():
+    raise SystemExit('Legacy FHIR ingestion is disabled. The strict viewer reads validated patient-only snapshots directly.')
     p = argparse.ArgumentParser()
     p.add_argument('--fhir', default='http://localhost:8080/fhir')
     p.add_argument('--data', type=Path, default=Path('benchmark-ehr/generated'))
